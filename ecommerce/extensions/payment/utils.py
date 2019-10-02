@@ -1,4 +1,5 @@
 import json
+import lxml
 import logging
 import re
 from urllib import urlencode
@@ -14,6 +15,22 @@ from ecommerce.extensions.payment.models import SDNCheckFailure
 
 logger = logging.getLogger(__name__)
 Basket = get_model('basket', 'Basket')
+
+
+class LxmlObjectJsonEncoder(json.JSONEncoder):
+    """
+       A specialized JSON encoder that can handle lxml objectify types
+    """
+    def default(self,o):
+        if isinstance(o, lxml.objectify.IntElement):
+            return int(o)
+        if isinstance(o, lxml.objectify.NumberElement) or isinstance(o, lxml.objectify.FloatElement):
+            return float(o)
+        if isinstance(o, lxml.objectify.ObjectifiedDataElement):
+            return str(o)
+        if hasattr(o, '__dict__'):
+            return o.__dict__
+        return json.JSONEncoder.default(self, o)
 
 
 def middle_truncate(string, chars):
