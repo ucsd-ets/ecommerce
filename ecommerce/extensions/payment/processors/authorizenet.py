@@ -7,6 +7,7 @@ import json
 from decimal import Decimal
 from django.urls import reverse
 from authorizenet import apicontractsv1
+from authorizenet.constants import constants
 from authorizenet.apicontrollers import (
     getHostedPaymentPageController,
     getTransactionDetailsController,
@@ -51,7 +52,8 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         configuration = self.configuration
         self.merchant_auth_name = configuration['merchant_auth_name']
         self.transaction_key = configuration['transaction_key']
-        self.autorizenet_redirect_url = configuration['redirect_url']
+        self.authorizenet_redirect_url = configuration['redirect_url']
+        self.authorizenet_production_mode = configuration['production_mode']
 
     @property
     def cancel_url(self):
@@ -125,6 +127,10 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         transaction_details_request.transId = transaction_id
 
         transaction_details_controller = getTransactionDetailsController(transaction_details_request)
+
+        if self.authorizenet_production_mode:
+            transaction_details_controller.setenvironment(constants.PRODUCTION)
+
         transaction_details_controller.execute()
 
         transaction_details_response = transaction_details_controller.getresponse()
@@ -190,6 +196,10 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         transaction_request.lineItems = line_items_list
 
         payment_page_controller = getHostedPaymentPageController(payment_page_request)
+
+        if self.authorizenet_production_mode:
+            payment_page_controller.setenvironment(constants.PRODUCTION)
+
         payment_page_controller.execute()
 
         payment_page_response = payment_page_controller.getresponse()
@@ -228,7 +238,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
             raise GatewayError('AuthorizeNet payment creation failure: unable to get AuthorizeNet form token')
 
         parameters = {
-            'payment_page_url': self.autorizenet_redirect_url,
+            'payment_page_url': self.authorizenet_redirect_url,
             'token': authorize_form_token
         }
         return parameters
@@ -241,7 +251,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
             Arguments:
                 transaction_response: Transaction details received from authorizeNet after successfull payment
                 basket (Basket): Basket being purchased via the payment processor.
-            
+
             Returns:
                 HandledProcessorResponse
         """
@@ -312,6 +322,10 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
 
         create_transaction_request.transactionRequest = transaction_request
         create_transaction_controller = createTransactionController(create_transaction_request)
+
+        if self.authorizenet_production_mode:
+            create_transaction_controller.setenvironment(constants.PRODUCTION)
+
         create_transaction_controller.execute()
 
         response = create_transaction_controller.getresponse()
