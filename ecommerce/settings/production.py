@@ -82,7 +82,8 @@ EMAIL_HOST_PASSWORD = config_from_yaml.get('ECOMMERCE_EMAIL_HOST_PASSWORD')
 authorizenet_dict = {
     'merchant_auth_name': config_from_yaml.get('AUTHORIZENET_MERCHANT_AUTH_NAME'),
     'transaction_key': config_from_yaml.get('AUTHORIZENET_TRANSACTION_KEY'),
-    'redirect_url': config_from_yaml.get('AUTHORIZENET_REDIRECT_URL')
+    'redirect_url': config_from_yaml.get('AUTHORIZENET_REDIRECT_URL'),
+    'production_mode': config_from_yaml.get('AUTHORIZENET_PRODUCTION_MODE', False),
 }
 PAYMENT_PROCESSOR_CONFIG['edx'].update({'authorizenet': authorizenet_dict})
 
