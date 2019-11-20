@@ -131,9 +131,11 @@
             {# Switch Basket view in between single and bulk purchase items #}
             {% if partner_sku %}
                 <div class="pull-left basket-switch-link">
-                    <a href="/basket/add/?sku={{ partner_sku }}" class="btn btn-link">
-                        {{ switch_link_text }}
-                    </a>
+                    {# [UCSD_CUSTOM] We are commenting following lines to hide bulk course purchase link #}
+
+                    {# <a href="/basket/add/?sku={{ partner_sku }}" class="btn btn-link"> #}
+                    {#    {{ switch_link_text }} #}
+                    {# </a> #}
                 </div>
             {% endif %}
 
@@ -183,9 +185,11 @@
         </div>
     </div>
     <div class="row help">
+        {% if support_url %}
         <div class="col-sm-12">
             <p><strong>{% trans "Have questions?" %}</strong></p>
             <a href="{{ support_url }}">{% trans "Please read our FAQs to view common questions about our certificates." %}</a>
         </div>
+        {% endif %}
     </div>
 </div>
