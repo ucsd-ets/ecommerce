@@ -50,7 +50,7 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
         mock_controller.return_value.getresponse.return_value = token_api_response
         actual_data = self.processor.get_transaction_parameters(self.basket, request=self.request)
         expected_data = {
-            'payment_page_url': self.processor.autorizenet_redirect_url,
+            'payment_page_url': self.processor.authorizenet_redirect_url,
             'token': "test_token"
         }
         self.assertDictEqual(actual_data, expected_data)
