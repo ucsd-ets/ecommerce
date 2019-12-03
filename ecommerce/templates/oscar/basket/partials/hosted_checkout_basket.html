@@ -178,11 +178,11 @@
             <span><i class="fa fa-exclamation-circle"></i></span>
             {# Translators: <strong></strong> tags will bold the text within. Keep the tags and translate the text within. #}
             {# [UCSD_CUSTOM] [EDX-230] We are commenting out|adding following lines to hide verified certificate language|add checkout language #}
-            {# % if display_verification_message %}
-                {# % trans "<strong>Note:</strong> To earn a verified certificate, you must verify your identity with a <strong>webcam</strong> and a <strong>government-issued photo ID</strong>. " %}
-            {# % else %}
-                {# % trans "<strong>Note:</strong> To complete your enrollment, select Checkout or Checkout with PayPal." %}
-            {# % endif %}
+            {# % if display_verification_message % #}
+                {# % trans "<strong>Note:</strong> To earn a verified certificate, you must verify your identity with a <strong>webcam</strong> and a <strong>government-issued photo ID</strong>. " % #}
+            {# % else % #}
+                {# % trans "<strong>Note:</strong> To complete your enrollment, select Checkout or Checkout with PayPal." % #}
+            {# % endif % #}
             {% trans "<strong>Note:</strong> To complete your enrollment, select Checkout with AuthorizeNet." %}
 
         </div>
