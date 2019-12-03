@@ -91,13 +91,14 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
         """
         expected_line_item = self.basket.all_lines()[0]
         expected_line_item_unit_price = expected_line_item.line_price_incl_tax_incl_discounts / expected_line_item.quantity
+        expected_custom_line_id = "{}_{}".format(self.basket.order_number, expected_line_item.product.id)
 
         actual_line_items_list = self.processor._get_authorizenet_lineitems(self.basket)
         actual_line_item = actual_line_items_list.lineItem[0]
 
-        self.assertEqual(actual_line_item.itemId, expected_line_item.product.course_id)
-        self.assertEqual(actual_line_item.name, expected_line_item.product.course_id)
-        self.assertEqual(actual_line_item.description, expected_line_item.product.title)
+        self.assertEqual(actual_line_item.itemId, expected_custom_line_id)
+        self.assertEqual(actual_line_item.name, expected_custom_line_id)
+        self.assertEqual(actual_line_item.description, expected_line_item.product.course_id)
         self.assertEqual(actual_line_item.quantity, expected_line_item.quantity)
         self.assertEqual(actual_line_item.unitPrice, expected_line_item_unit_price)
 
