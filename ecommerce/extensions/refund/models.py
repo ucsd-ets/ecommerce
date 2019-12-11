@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import logging
+import waffle
 
 from django.conf import settings
 from django.db import models
@@ -12,13 +13,16 @@ from oscar.core.loading import get_class, get_model
 from oscar.core.utils import get_default_currency
 
 from ecommerce.core.constants import COURSE_ENTITLEMENT_PRODUCT_CLASS_NAME, SEAT_PRODUCT_CLASS_NAME
+from ecommerce.core.url_utils import get_lms_explore_courses_url
 from ecommerce.extensions.analytics.utils import audit_log
 from ecommerce.extensions.checkout.utils import format_currency, get_receipt_page_url
 from ecommerce.extensions.fulfillment.api import revoke_fulfillment_for_refund
 from ecommerce.extensions.order.constants import PaymentEventTypeName
+from ecommerce.extensions.payment.exceptions import RefundError
 from ecommerce.extensions.payment.helpers import get_processor_class_by_name
 from ecommerce.extensions.refund.exceptions import InvalidStatus
 from ecommerce.extensions.refund.status import REFUND, REFUND_LINE
+from ecommerce.notifications.notifications import send_notification
 
 logger = logging.getLogger(__name__)
 
@@ -221,10 +225,26 @@ class Refund(StatusMixin, TimeStampedModel):
         order_number = self.order.number
         order_url = get_receipt_page_url(site_configuration, order_number)
         amount = format_currency(self.currency, self.total_credit_excl_tax)
-
-        send_course_refund_email.delay(self.user.email, self.id, amount, course_name, order_number,
+        if waffle.switch_is_active('sailthru_enable'):
+            send_course_refund_email.delay(self.user.email, self.id, amount, course_name, order_number,
                                        order_url, site_code=site_code)
-        logger.info('Course refund notification scheduled for Refund [%d].', self.id)
+            logger.info('Course refund notification scheduled for Refund [%d].', self.id)
+        else:
+            send_notification(
+                self.user,
+                'REFUND',
+                {
+                    'refund_id': self.id,
+                    'amount': amount,
+                    'course_name': course_name,
+                    'order_number': order_number,
+                    'order_url': order_url,
+                    'site_code': site_code,
+                    'explore_courses_url': get_lms_explore_courses_url(),
+                },
+                self.order.site
+            )
+            logger.info('Course refund notification for Refund [%d] has been sent to learner %s.', self.id, self.user.email)
 
     def _revoke_lines(self):
         """Revoke fulfillment for the lines in this Refund."""
@@ -247,7 +267,7 @@ class Refund(StatusMixin, TimeStampedModel):
                 self.set_status(REFUND.PAYMENT_REFUNDED)
                 if notify_purchaser:
                     self._notify_purchaser()
-            except PaymentError:
+            except (PaymentError, RefundError):
                 logger.exception('Failed to issue credit for refund [%d].', self.id)
                 self.set_status(REFUND.PAYMENT_REFUND_ERROR)
                 return False
