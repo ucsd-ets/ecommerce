@@ -4,6 +4,7 @@ import waffle
 from django.dispatch import receiver
 from oscar.core.loading import get_class, get_model
 
+from ecommerce.core.url_utils import get_lms_dashboard_url
 from ecommerce.courses.utils import mode_for_product
 from ecommerce.extensions.analytics.utils import silence_exceptions, track_segment_event
 from ecommerce.extensions.checkout.utils import get_credit_provider_details, get_receipt_page_url
@@ -111,6 +112,7 @@ def send_course_purchase_email(sender, order=None, **kwargs):  # pylint: disable
                         'COURSE_PURCHASED',
                         {
                             'course_title': product.title,
+                            'dashboard_url': get_lms_dashboard_url(),
                         },
                         order.site
                     )
