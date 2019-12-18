@@ -100,9 +100,8 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         line_items_list = apicontractsv1.ArrayOfLineItem()
         for line in basket.all_lines():
             line_item = apicontractsv1.lineItemType()
-            line_item.itemId = line.product.course_id
-            line_item.name = line.product.course_id
-            line_item.description = line.product.title
+            line_item.itemId = line_item.name = "{}_{}".format(basket.order_number, line.product.id)
+            line_item.description = line.product.course_id
             line_item.quantity = line.quantity
             line_item.unitPrice = line.line_price_incl_tax_incl_discounts / line.quantity
             line_items_list.lineItem.append(line_item)

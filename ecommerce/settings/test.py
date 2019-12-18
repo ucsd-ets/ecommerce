@@ -111,6 +111,7 @@ PAYMENT_PROCESSOR_CONFIG = {
             'cancel_checkout_path': PAYMENT_PROCESSOR_CANCEL_PATH,
             'merchant_auth_name': "fake_merchant_auth_name",
             'transaction_key': "edx_fake_key",
+            'production_mode': False
         }
     },
     'other': {
@@ -146,6 +147,7 @@ PAYMENT_PROCESSOR_CONFIG = {
             'cancel_checkout_path': PAYMENT_PROCESSOR_CANCEL_PATH,
             'merchant_auth_name': "fake_merchant_auth_name",
             'transaction_key': "edx_fake_key",
+            'production_mode': False
         }
     }
 }
