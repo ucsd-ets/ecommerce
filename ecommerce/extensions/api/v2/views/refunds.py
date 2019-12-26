@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from ecommerce.extensions.api import serializers
 from ecommerce.extensions.api.exceptions import BadRequestException
 from ecommerce.extensions.api.permissions import CanActForUser
+from ecommerce.extensions.payment.exceptions import UnSettledTransaction
 from ecommerce.extensions.refund.api import (
     create_refunds,
     create_refunds_for_entitlement,
@@ -131,13 +132,23 @@ class RefundProcessView(generics.UpdateAPIView):
 
         refund = self.get_object()
         result = False
+        is_unsettled = False
 
         if action in (APPROVE, APPROVE_PAYMENT_ONLY):
             revoke_fulfillment = action == APPROVE
-            result = refund.approve(revoke_fulfillment=revoke_fulfillment)
+            try:
+                result = refund.approve(revoke_fulfillment=revoke_fulfillment)
+            except UnSettledTransaction:
+                is_unsettled = True
         elif action == DENY:
             result = refund.deny()
 
         http_status = status.HTTP_200_OK if result else status.HTTP_500_INTERNAL_SERVER_ERROR
         serializer = self.get_serializer(refund)
-        return Response(serializer.data, status=http_status)
+        response_dict = serializer.data
+
+        if is_unsettled:
+            response_dict.update({'status_code': 54})
+            http_status = status.HTTP_200_OK
+
+        return Response(response_dict, status=http_status)

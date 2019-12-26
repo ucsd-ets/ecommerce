@@ -17,7 +17,8 @@ from ecommerce.extensions.payment.exceptions import (
     RefundError,
     PaymentProcessorResponseNotFound,
     MissingProcessorResponseCardInfo,
-    MissingTransactionDetailError
+    MissingTransactionDetailError,
+    UnSettledTransaction
 )
 from oscar.core.loading import get_model
 from oscar.apps.payment.exceptions import GatewayError
@@ -349,10 +350,12 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
                 if hasattr(response, 'transactionResponse') == True and hasattr(response.transactionResponse, 'errors') == True:
                     logger.error('Error Code: %s' % str(response.transactionResponse.errors.error[0].errorCode))
                     logger.error('Error message: %s' % response.transactionResponse.errors.error[0].errorText)
+                    if response.transactionResponse.errors.error[0].errorCode == 54:
+                        raise UnSettledTransaction()
                 else:
                     logger.error('Error Code: %s' % response.messages.message[0]['code'].text)
                     logger.error('Error message: %s' % response.messages.message[0]['text'].text)
 
         msg = 'An error occurred while attempting to issue a credit (via Authorizenet) for order [{}].'.format(order_number)
         logger.exception(msg)
-        raise  RefundError(msg)
+        raise RefundError(msg)
