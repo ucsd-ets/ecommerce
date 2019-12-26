@@ -2,10 +2,9 @@
 from __future__ import absolute_import, unicode_literals
 
 import base64
-import logging
 import json
-from decimal import Decimal
-from django.urls import reverse
+import logging
+
 from authorizenet import apicontractsv1
 from authorizenet.constants import constants
 from authorizenet.apicontrollers import (
@@ -13,6 +12,13 @@ from authorizenet.apicontrollers import (
     getTransactionDetailsController,
     createTransactionController
 )
+from django.conf import settings as django_settings
+from decimal import Decimal
+from django.urls import reverse
+from oscar.core.loading import get_model, get_class
+from oscar.apps.payment.exceptions import GatewayError
+from premailer import transform
+
 from ecommerce.extensions.payment.exceptions import (
     RefundError,
     PaymentProcessorResponseNotFound,
@@ -20,8 +26,6 @@ from ecommerce.extensions.payment.exceptions import (
     MissingTransactionDetailError,
     UnSettledTransaction
 )
-from oscar.core.loading import get_model
-from oscar.apps.payment.exceptions import GatewayError
 from ecommerce.extensions.payment.processors import (
     BaseClientSidePaymentProcessor,
     HandledProcessorResponse
@@ -31,6 +35,8 @@ from ecommerce.extensions.payment.utils import LxmlObjectJsonEncoder
 
 logger = logging.getLogger(__name__)
 PaymentProcessorResponse = get_model('payment', 'PaymentProcessorResponse')
+CommunicationEventType = get_model('customer', 'CommunicationEventType')
+Dispatcher = get_class('customer.utils', 'Dispatcher')
 
 AUTH_CAPTURE_TRANSACTION_TYPE = "authCaptureTransaction"
 
@@ -93,6 +99,55 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         settings.setting.append(payment_button_setting)
         settings.setting.append(payment_return_setting)
         return settings
+
+    def _send_email_notification_to_support(self, commtype_code, context, learner, site=None):
+        """
+            Send email to ecommerce support team.
+        """
+        support_email = django_settings.ECOMMERCE_SUPPORT_EMAIL
+        if not support_email:
+            log.error('Unable to send a refund email as support email is not configured.')
+            return
+
+        try:
+            event_type = CommunicationEventType.objects.get(code=commtype_code)
+        except CommunicationEventType.DoesNotExist:
+            try:
+                messages = CommunicationEventType.objects.get_and_render(commtype_code, context)
+            except Exception:  # pylint: disable=broad-except
+                log.error('Unable to locate a DB entry or templates for communication type [%s]. '
+                        'No notification has been sent.', commtype_code)
+                return
+        else:
+            messages = event_type.get_messages(context)
+
+        if messages.get('html'):
+            messages['html'] = transform(messages.get('html'))
+
+        if messages and messages.get('body') and messages.get('subject'):
+            Dispatcher().send_email_messages(support_email, messages, site)
+
+    def _send_refund_failure_notification(self, reference_number, error_code, error_message, basket):
+        """
+            Send refund failure email.
+        """
+        commtype_code = 'REFUND_FAILED'
+        learner = basket.owner
+        site = basket.site
+        product = basket.all_lines()[0].product
+        context = {
+            'learner_name':  learner.get_full_name(),
+            'learner_email': learner.email,
+            'site_domain': site.domain,
+            'platform_name': site.name,
+            'course_name': product.title,
+            'course_id': product.course_id,
+            'order_number': basket.order_number,
+            'error_code': error_code,
+            'error_message': error_message,
+            'reference_number': reference_number,
+        }
+        self._send_email_notification_to_support(commtype_code, context, learner, site)
 
     def _get_authorizenet_lineitems(self, basket):
         """
@@ -279,6 +334,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
             Refund a AuthorizeNet payment for settled transactions.For more Authorizenet Refund API information,
             visit https://developer.authorize.net/api/reference/#payment-transactions-refund-a-transaction
         """
+        error_code = error_message = None
         try:
             paymnet_response = PaymentProcessorResponse.objects.filter(
                 processor_name=self.NAME,
@@ -331,7 +387,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         response = create_transaction_controller.getresponse()
         if response is not None:
             if response.messages.resultCode == "Ok":
-                if hasattr(response.transactionResponse, 'messages') == True:
+                if hasattr(response.transactionResponse, 'messages'):
                     logger.info('Message Code: %s' % response.transactionResponse.messages.message[0].code)
                     logger.info('Description: %s' % response.transactionResponse.messages.message[0].description)
 
@@ -342,20 +398,24 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
                     return refund_transaction_id
                 else:
                     logger.error('AuthorizeNet issue credit request failed.')
-                    if hasattr(response.transactionResponse, 'errors') == True:
-                        logger.error('Error Code:  %s' % str(response.transactionResponse.errors.error[0].errorCode))
-                        logger.error('Error message: %s' % response.transactionResponse.errors.error[0].errorText)
+                    if hasattr(response.transactionResponse, 'errors'):
+                        error_code = response.transactionResponse.errors.error[0].errorCode
+                        error_message = response.transactionResponse.errors.error[0].errorText
+                        logger.error('Error Code:  %s' % str(error_code))
+                        logger.error('Error message: %s' % error_message)
             else:
                 logger.error('AuthorizeNet issue credit request failed.')
-                if hasattr(response, 'transactionResponse') == True and hasattr(response.transactionResponse, 'errors') == True:
-                    logger.error('Error Code: %s' % str(response.transactionResponse.errors.error[0].errorCode))
-                    logger.error('Error message: %s' % response.transactionResponse.errors.error[0].errorText)
-                    if response.transactionResponse.errors.error[0].errorCode == 54:
-                        raise UnSettledTransaction()
+                if hasattr(response, 'transactionResponse') and hasattr(response.transactionResponse, 'errors'):
+                    error_code = response.transactionResponse.errors.error[0].errorCode
+                    error_message = response.transactionResponse.errors.error[0].errorText
                 else:
-                    logger.error('Error Code: %s' % response.messages.message[0]['code'].text)
-                    logger.error('Error message: %s' % response.messages.message[0]['text'].text)
-
+                    error_code = response.messages.message[0]['code'].text
+                    error_message = response.messages.message[0]['text'].text
+                logger.error('Error Code: %s' % str(error_code))
+                logger.error('Error message: %s' % error_message)
         msg = 'An error occurred while attempting to issue a credit (via Authorizenet) for order [{}].'.format(order_number)
         logger.exception(msg)
+        self._send_refund_failure_notification(reference_number, error_code, error_message, basket)
+        if error_code == 54:
+            raise UnSettledTransaction()
         raise RefundError(msg)

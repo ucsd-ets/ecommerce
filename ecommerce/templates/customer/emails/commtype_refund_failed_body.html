@@ -1,0 +1,31 @@
+{% extends 'customer/email_base.html' %}
+{% load i18n %}
+{% block body %}
+<!-- Message Body -->
+<tr>
+    <td class="container-padding" bgcolor="#ffffff" style="background-color: #ffffff; padding-left: 30px; padding-right: 30px; font-size: 13px; line-height: 20px; font-family: Open Sans, sans-serif; color: #333; border-radius: 5px;" align="left">
+        <br>
+        <!--message HTML content -->
+        <p>{% blocktrans %}A Refund request for learner <b>{{learner_name}}</b> against transaction <b>{{reference_number}}</b> is failed.{% endblocktrans %}</p>
+        <p>{% trans "Complete details are as follows." %}</p>
+        <br>
+
+        <p>{% blocktrans %}<b>Learner</b>{% endblocktrans %}</p>
+        <p>{% blocktrans %}Name: {{learner_name}}{% endblocktrans %}</p>
+        <p>{% blocktrans %}Email: {{learner_email}}{% endblocktrans %}</p>
+
+        <p>{% blocktrans %}<b>Order</b>{% endblocktrans %}</p>
+        <p>{% blocktrans %}Order Number: {{order_number}}{% endblocktrans %}</p>
+        <p>{% blocktrans %}Reference Transacion ID: {{reference_number}}{% endblocktrans %}</P>
+        <p>{% blocktrans %}Course ID: {{course_id}}{% endblocktrans %}</p>
+        <p>{% blocktrans %}Course Name: {{course_name}}{% endblocktrans %}</p>
+
+        <p>{% blocktrans %}<b>Error</b>{% endblocktrans %}</p>
+        <p>{% blocktrans %}Code: {{error_code}}{% endblocktrans %}</p>
+        <p>{% blocktrans %}Message: {{error_message}}{% endblocktrans %}</p>
+    </td>
+        <!--/message HTML content -->
+</tr>
+<!--/100% wrapper-->
+<!--/Message Body -->
+{% endblock body %}
