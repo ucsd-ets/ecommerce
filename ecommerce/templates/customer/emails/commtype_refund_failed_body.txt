@@ -1,0 +1,17 @@
+{% load i18n %}
+{% blocktrans %}A Refund request for learner {{learner_name}} against transaction {{reference_number}} is failed.{% endblocktrans %}
+{% trans "Complete details are as follows." %}
+
+{% blocktrans %}Learner{% endblocktrans %}
+{% blocktrans %}Name: {{learner_name}}{% endblocktrans %}
+{% blocktrans %}Email: {{learner_email}}{% endblocktrans %}
+
+{% blocktrans %}Order{% endblocktrans %}
+{% blocktrans %}Order Number: {{order_number}}{% endblocktrans %}
+{% blocktrans %}Reference Transacion ID: {{reference_number}}{% endblocktrans %}
+{% blocktrans %}Course ID: {{course_id}}{% endblocktrans %}
+{% blocktrans %}Course Name: {{course_name}}{% endblocktrans %}
+
+{% blocktrans %}Error{% endblocktrans %}
+{% blocktrans %}Code: {{error_code}}{% endblocktrans %}
+{% blocktrans %}Message: {{error_message}}{% endblocktrans %}
