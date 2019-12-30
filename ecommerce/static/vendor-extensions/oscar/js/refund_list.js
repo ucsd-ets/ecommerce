@@ -32,16 +32,25 @@ $(document).ready(function () {
             // refund, even when the refund has entered an error state during processing.
             $('tr[data-refund-id=' + refund_id + '] .refund-status').text(gettext('Error'));
 
-            message = interpolate(
-                gettext('Failed to process refund #%(refund_id)s: %(error)s. Please try again, or contact the E-Commerce Development Team.'),
-                {refund_id: refund_id, error: errorThrown},
-                true
-            );
-            addMessage(
-                'alert-error',
-                'icon-exclamation-sign',
-                message
-            );
+            if (jqXHR.responseJSON.status_code && jqXHR.responseJSON.status_code === 54){
+                message = interpolate(
+                    gettext('Failed to process refund #%(refund_id)s due to unsettled transaction. Please try again in 24 Hours.'),
+                    {refund_id: refund_id},
+                    true
+                );
+                addMessage('alert-warning', 'icon-warning-sign', message);
+            } else {
+                message = interpolate(
+                    gettext('Failed to process refund #%(refund_id)s: %(error)s. Please try again, or contact the E-Commerce Development Team.'),
+                    {refund_id: refund_id, error: errorThrown},
+                    true
+                );
+                addMessage(
+                    'alert-error',
+                    'icon-exclamation-sign',
+                    message
+                );
+            }
         }).always(function () {
             // Re-enable the button
             $btn.click(processRefund);

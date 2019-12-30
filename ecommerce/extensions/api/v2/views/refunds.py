@@ -149,6 +149,5 @@ class RefundProcessView(generics.UpdateAPIView):
 
         if is_unsettled:
             response_dict.update({'status_code': 54})
-            http_status = status.HTTP_200_OK
 
         return Response(response_dict, status=http_status)
