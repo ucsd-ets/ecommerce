@@ -106,7 +106,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         """
         support_email = django_settings.ECOMMERCE_SUPPORT_EMAIL
         if not support_email:
-            log.error('Unable to send a refund email as support email is not configured.')
+            logger.error('Unable to send a refund email as support email is not configured.')
             return
 
         try:
@@ -115,7 +115,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
             try:
                 messages = CommunicationEventType.objects.get_and_render(commtype_code, context)
             except Exception:  # pylint: disable=broad-except
-                log.error('Unable to locate a DB entry or templates for communication type [%s]. '
+                logger.error('Unable to locate a DB entry or templates for communication type [%s]. '
                         'No notification has been sent.', commtype_code)
                 return
         else:
