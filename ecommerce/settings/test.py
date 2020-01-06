@@ -190,3 +190,6 @@ SAILTHRU_SECRET = 'top_secret'
 
 # Cookie domain
 ECOMMERCE_COOKIE_DOMAIN = "test.edu"
+
+# Ecommerce support email
+ECOMMERCE_SUPPORT_EMAIL = "test@gmail.com"
