@@ -21,8 +21,16 @@ refund_success_response = """
 refund_error_response = """
     <errors>
         <error>
-            <errorCode>54</errorCode>
+            <errorCode>22</errorCode>
             <errorText>fake error text</errorText>
+        </error>
+    </errors> """
+
+unsettled_transaction_refund_error_response = """
+    <errors>
+        <error>
+            <errorCode>54</errorCode>
+            <errorText>unsettled transcation</errorText>
         </error>
     </errors> """
 
