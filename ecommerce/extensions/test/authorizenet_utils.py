@@ -4,7 +4,6 @@ from ecommerce.extensions.test.constants import (
     hosted_payment_token_response_template,
     transaction_detail_response_template,
     refund_response_template,
-    refund_error_response,
     refund_success_response,
     transaction_detail_response_success_data
 )
