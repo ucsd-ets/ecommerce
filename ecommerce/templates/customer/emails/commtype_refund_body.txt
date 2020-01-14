@@ -6,6 +6,6 @@
 {% trans "To view your order receipt, visit the following link:" %}
 {{order_url}}
 
-{% blocktrans %}We are sorry to see you go. If you would like to explore other courses that are available on LearnX @ UC San Diego, please visit {{explore_courses_url}}.{% endblocktrans %}
+{% blocktrans %}We are sorry to see you go. If you would like to explore other courses that are available on UC San Diego Online, please visit {{explore_courses_url}}.{% endblocktrans %}
 
 {% blocktrans with course_title=course_name platform_name=platform_name %}You are receiving this email because your refund has been processed for course {{course_name}} on {{platform_name}}{% endblocktrans %}
