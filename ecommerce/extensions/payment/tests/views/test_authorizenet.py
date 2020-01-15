@@ -168,7 +168,7 @@ class AuthorizeNetNotificationViewTests(PaymentEventsMixin, TestCase):
             basket.owner,
             'TRANSACTION_REJECTED',
             {
-                'course_title': basket.all_lines()[0].product.title,
+                'course_title': basket.all_lines()[0].product.course.name,
                 'transaction_status': 'Declined',
             },
             basket.site
@@ -199,7 +199,7 @@ class AuthorizeNetNotificationViewTests(PaymentEventsMixin, TestCase):
             basket.owner,
             'TRANSACTION_REJECTED',
             {
-                'course_title': basket.all_lines()[0].product.title,
+                'course_title': basket.all_lines()[0].product.course.name,
                 'transaction_status': 'Error',
             },
             basket.site
