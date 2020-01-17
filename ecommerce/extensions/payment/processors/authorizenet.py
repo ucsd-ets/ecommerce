@@ -140,7 +140,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
             'learner_email': learner.email,
             'site_domain': site.domain,
             'platform_name': site.name,
-            'course_name': product.title,
+            'course_name': product.course.name,
             'course_id': product.course_id,
             'order_number': basket.order_number,
             'error_code': error_code,
