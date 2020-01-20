@@ -111,7 +111,7 @@ def send_course_purchase_email(sender, order=None, **kwargs):  # pylint: disable
                         order.user,
                         'COURSE_PURCHASED',
                         {
-                            'course_title': product.title,
+                            'course_title': product.course.name,
                             'dashboard_url': get_lms_dashboard_url(),
                         },
                         order.site
@@ -139,7 +139,7 @@ def send_course_purchase_email(sender, order=None, **kwargs):  # pylint: disable
                         order.user,
                         'CREDIT_RECEIPT',
                         {
-                            'course_title': product.title,
+                            'course_title': product.course.name,
                             'receipt_page_url': receipt_page_url,
                             'credit_hours': product.attr.credit_hours,
                             'credit_provider': provider_data['display_name'],
