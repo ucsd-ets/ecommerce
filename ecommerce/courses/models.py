@@ -123,15 +123,7 @@ class Course(models.Model):
 
     def get_course_seat_name(self, certificate_type, id_verification_required):
         """ Returns the name for a course seat. """
-        name = u'Seat in {}'.format(self.name)
-
-        if certificate_type != '':
-            name += u' with {} certificate'.format(certificate_type)
-
-            if id_verification_required:
-                name += u' (and ID verification)'
-
-        return name
+        return u'Seat in {} with Statement of Accomplishment'.format(self.name)
 
     def create_or_update_seat(
             self,
