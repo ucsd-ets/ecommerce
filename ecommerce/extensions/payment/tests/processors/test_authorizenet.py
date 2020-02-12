@@ -162,7 +162,7 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
             'learner_email': expected_learner.email,
             'site_domain': expected_site.domain,
             'platform_name': expected_site.name,
-            'course_name': expected_product.title,
+            'course_name': expected_product.course.name,
             'course_id': expected_product.course_id,
             'order_number': self.basket.order_number,
             'error_code': error_code,

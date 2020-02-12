@@ -104,6 +104,10 @@ def send_course_purchase_email(sender, order=None, **kwargs):  # pylint: disable
             product = order.lines.first().product
             credit_provider_id = getattr(product.attr, 'credit_provider', None)
             product_mode = mode_for_product(product)
+
+            if product.is_coupon_product:
+                return
+
             if not credit_provider_id:
                 if product_mode != 'credit':
                     # send course purchase email for verified courses
@@ -111,7 +115,7 @@ def send_course_purchase_email(sender, order=None, **kwargs):  # pylint: disable
                         order.user,
                         'COURSE_PURCHASED',
                         {
-                            'course_title': product.title,
+                            'course_title': product.course.name,
                             'dashboard_url': get_lms_dashboard_url(),
                         },
                         order.site
@@ -139,7 +143,7 @@ def send_course_purchase_email(sender, order=None, **kwargs):  # pylint: disable
                         order.user,
                         'CREDIT_RECEIPT',
                         {
-                            'course_title': product.title,
+                            'course_title': product.course.name,
                             'receipt_page_url': receipt_page_url,
                             'credit_hours': product.attr.credit_hours,
                             'credit_provider': provider_data['display_name'],

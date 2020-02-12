@@ -1,2 +1,2 @@
 {% load i18n %}
-{% trans "Refund Failed" %}
+{% blocktrans %}[online.ucsd.edu] Open edX Administrative Action Needed for {{learner_name}} {% endblocktrans %}{% if course_name %}{% blocktrans %}/ {{course_name}}{% endblocktrans %}{% endif %}

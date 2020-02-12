@@ -2,8 +2,8 @@
 {% trans "Receipt Confirmation for: " %}{{course_title}}
 
 {% blocktrans %}Hi {{full_name}},{% endblocktrans %}
-{% blocktrans with course_title=course_title platform_name=platform_name %} Welcome to {{course_title}}, available through {{platform_name}}.{% endblocktrans %}
+{% blocktrans with course_title=course_title platform_name=platform_name %} Welcome to {{course_title}} with a statement of accomplishment, available through {{platform_name}}.{% endblocktrans %}
 {% blocktrans with platform_name=platform_name %}We have received your enrollment, and will be processing the enrollment charge on your credit card within 48 hours. You will see the charge appear on your credit card statement, with a company name of {{platform_name}}. {% endblocktrans %}
-{% blocktrans with dashboard_url=dashboard_url course_title=course_title platform_name=platform_name %}You can access {{course_title}} through your learner dashboard: {{dashboard_url}} on {{platform_name}}.{% endblocktrans %}
+{% blocktrans with dashboard_url=dashboard_url course_title=course_title platform_name=platform_name %}You can access {{course_title}} with a statement of accomplishment through your learner dashboard: {{dashboard_url}} on {{platform_name}}.{% endblocktrans %}
 
-{% blocktrans with course_title=course_title platform_name=platform_name %}You are receiving this email because you have purchased {{course_title}} on {{platform_name}}.{% endblocktrans %}
+{% blocktrans with course_title=course_title platform_name=platform_name %}You are receiving this email because you have purchased {{course_title}} with a statement of accomplishment on {{platform_name}}.{% endblocktrans %}

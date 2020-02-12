@@ -58,7 +58,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
         """
             send email to the user after receiving a transcation notification with
             decilened/error status.
-            
+
             Arguments:
                 basket: transaction relevant basket.
                 transaction_status: Error or Declined.
@@ -77,7 +77,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
     def _get_basket(self, basket_id):
         """
             Retrieve a basket using a basket Id.
-            
+
             Arguments:
                 payment_id: payment_id received from AuthorizeNet.
             Returns:
@@ -96,7 +96,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
     def _get_billing_address(self, transaction_bill, order_number, basket):
         """
             Prepare and return a billing address object using transaction billing information.
-            
+
             Arguments:
                 transaction_bill: bill information from AuthorizeNet transaction response.
                 order_number: related order number
@@ -220,7 +220,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
                     'been rejected with status: [%s].'
                 )
                 logger.error(error_message, transaction_id, basket_id, transaction_status)
-                course_title = product.title
+                course_title = product.course.name
                 self._send_transaction_declined_email(basket, transaction_status, course_title)
 
             else:
