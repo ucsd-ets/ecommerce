@@ -36,6 +36,8 @@ from ecommerce.extensions.payment.utils import LxmlObjectJsonEncoder
 logger = logging.getLogger(__name__)
 PaymentProcessorResponse = get_model('payment', 'PaymentProcessorResponse')
 CommunicationEventType = get_model('customer', 'CommunicationEventType')
+Refund=get_model('refund','Refund')
+Order = get_model('order', 'Order')
 Dispatcher = get_class('customer.utils', 'Dispatcher')
 
 AUTH_CAPTURE_TRANSACTION_TYPE = "authCaptureTransaction"
@@ -135,6 +137,16 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         learner = basket.owner
         site = basket.site
         product = basket.all_lines()[0].product
+        order_number = basket.order_number
+        order = Order.objects.get(number=order_number)
+        base_url = '{}/dashboard'.format(django_settings.ECOMMERCE_URL_ROOT)
+        order_url = '{}/orders/{}/'.format(base_url, order_number)
+        refund_url = '{}/refunds/{}/'.format(
+            base_url,
+            Refund.objects.get(order=order).id
+        )
+        order_date = order.date_placed.strftime('%c')
+
         context = {
             'learner_name':  learner.get_full_name(),
             'learner_email': learner.email,
@@ -142,10 +154,13 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
             'platform_name': site.name,
             'course_name': product.course.name,
             'course_id': product.course_id,
-            'order_number': basket.order_number,
+            'order_number': order_number,
             'error_code': error_code,
             'error_message': error_message,
             'reference_number': reference_number,
+            'order_url': order_url,
+            'order_date': order_date,
+            'refund_url': refund_url,
         }
         self._send_email_notification_to_support(commtype_code, context, learner, site)
 
