@@ -19,7 +19,7 @@
                 <div class="basket-items">
                     {% if line_data.seat_type %}
                         <p class="certificate_type">
-                            {% trans "Earn a valuable certificate to showcase the skills you learn in" %}
+                            {% trans "Earn a valuable statement of accomplishment to showcase the skills you learn in" %}
                         </p>
                     {% endif %}
                     <div class="row">
@@ -177,9 +177,9 @@
         <div class="col-sm-12">
             <span><i class="fa fa-exclamation-circle"></i></span>
             {# Translators: <strong></strong> tags will bold the text within. Keep the tags and translate the text within. #}
-            {# [UCSD_CUSTOM] [EDX-230] We are commenting out|adding following lines to hide verified certificate language|add checkout language #}
+            {# [UCSD_CUSTOM] [EDX-230] We are commenting out|adding following lines to hide statement of accomplishment language|add checkout language #}
             {# % if display_verification_message % #}
-                {# % trans "<strong>Note:</strong> To earn a verified certificate, you must verify your identity with a <strong>webcam</strong> and a <strong>government-issued photo ID</strong>. " % #}
+                {# % trans "<strong>Note:</strong> To earn a statement of accomplishment, you must verify your identity with a <strong>webcam</strong> and a <strong>government-issued photo ID</strong>. " % #}
             {# % else % #}
                 {# % trans "<strong>Note:</strong> To complete your enrollment, select Checkout or Checkout with PayPal." % #}
             {# % endif % #}
@@ -191,7 +191,7 @@
         {% if support_url %}
         <div class="col-sm-12">
             <p><strong>{% trans "Have questions?" %}</strong></p>
-            <a href="{{ support_url }}">{% trans "Please read our FAQs to view common questions about our certificates." %}</a>
+            <a href="{{ support_url }}">{% trans "Please read our FAQs to view common questions about our statements of accomplishment." %}</a>
         </div>
         {% endif %}
     </div>

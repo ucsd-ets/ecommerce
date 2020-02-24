@@ -98,7 +98,7 @@ define([
                 switch (this.get('certificate_type')) {
                 case 'verified':
                 case 'credit':
-                    return gettext('Verified Certificate');
+                    return gettext('Statement of Accomplishment');
 
                 case 'professional':
                 case 'no-id-professional':
@@ -108,7 +108,7 @@ define([
                     return gettext('Honor Certificate');
 
                 default:
-                    return '(' + gettext('No Certificate') + ')';
+                    return '(' + gettext('No Statement of Accomplishment') + ')';
                 }
             }
         });
