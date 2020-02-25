@@ -101,4 +101,6 @@ ENTERPRISE_API_URL = urljoin(ENTERPRISE_SERVICE_URL, 'api/v1/')
 # Authorizenet payment processor set a cookie for dashboard to show pending course purchased dashoard
 # notification. This cookie domain will be used to set and delete that cookie.
 ECOMMERCE_COOKIE_DOMAIN = config_from_yaml.get('ECOMMERCE_COOKIE_DOMAIN')
+
 ECOMMERCE_SUPPORT_EMAIL = config_from_yaml.get('ECOMMERCE_SUPPORT_EMAIL')
+ORDER_NUMBER_PREFIX = config_from_yaml.get('ORDER_NUMBER_PREFIX')
