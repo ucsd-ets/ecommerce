@@ -7,10 +7,14 @@
 {% blocktrans %}Email: {{learner_email}}{% endblocktrans %}
 
 {% blocktrans %}Order{% endblocktrans %}
+{% blocktrans %}Order Placement Date: {{order_date}}{% endblocktrans %}
 {% blocktrans %}Order Number: {{order_number}}{% endblocktrans %}
 {% blocktrans %}Reference Transacion ID: {{reference_number}}{% endblocktrans %}
 {% blocktrans %}Course ID: {{course_id}}{% endblocktrans %}
 {% blocktrans %}Course Name: {{course_name}}{% endblocktrans %}
+
+{% blocktrans %}Order Url: {{order_url}}{% endblocktrans %}
+{% blocktrans %}Refund Url: {{refund_url}}{% endblocktrans %}
 
 {% blocktrans %}Error{% endblocktrans %}
 {% blocktrans %}Code: {{error_code}}{% endblocktrans %}
