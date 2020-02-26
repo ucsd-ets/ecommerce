@@ -42,6 +42,7 @@ from ecommerce.extensions.order.exceptions import AlreadyPlacedOrderException
 from ecommerce.extensions.partner.shortcuts import get_partner_for_site
 from ecommerce.extensions.payment.constants import CLIENT_SIDE_CHECKOUT_FLAG_NAME
 from ecommerce.extensions.payment.forms import PaymentForm
+from ecommerce.ucsd_features.services.coupons import CouponService
 
 BasketAttribute = get_model('basket', 'BasketAttribute')
 BasketAttributeType = get_model('basket', 'BasketAttributeType')
@@ -50,6 +51,8 @@ logger = logging.getLogger(__name__)
 Product = get_model('catalogue', 'Product')
 StockRecord = get_model('partner', 'StockRecord')
 Voucher = get_model('voucher', 'Voucher')
+
+coupon_service = CouponService()
 
 
 class BasketAddItemsView(View):
@@ -474,6 +477,13 @@ class VoucherAddView(BaseVoucherAddView):  # pylint: disable=function-redefined
         else:
             try:
                 voucher = self.voucher_model._default_manager.get(code=code)  # pylint: disable=protected-access
+                if not coupon_service.is_voucher_available_for_user(voucher, self.request.user):
+                    messages.error(
+                        self.request,
+                        _("You are not authorized to use this Coupon Code")
+                    )
+                    return redirect_to_referrer(self.request, 'basket:summary')
+
             except self.voucher_model.DoesNotExist:
                 messages.error(
                     self.request,
