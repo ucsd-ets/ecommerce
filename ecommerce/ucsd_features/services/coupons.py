@@ -69,7 +69,7 @@ class CouponService:
                 logger.info(
                     'Vouchers limit for coupon: {} has been reached.'
                     ' Need to make more vouchers for the coupon'.format(coupon_product)
-                    )
+                )
         return all_available_vouchers
 
     def _get_available_vouchers_in_coupon(self, coupon):
@@ -82,7 +82,9 @@ class CouponService:
             )
 
             if unassigned_vouchers:
-                available_vouchers = [x for x in unassigned_vouchers if x.is_available_to_user()[0]]
+                available_vouchers = [
+                    x for x in unassigned_vouchers if x.is_available_to_user()[0] and x.is_active()
+                ]
                 all_vouchers.extend(available_vouchers)
 
         return all_vouchers
