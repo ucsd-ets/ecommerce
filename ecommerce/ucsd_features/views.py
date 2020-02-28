@@ -54,10 +54,9 @@ class AssignVoucherView(GenericAPIView):
                                 course_key,
                                 remaining_vouchers_count
                             ))
-
+                coupons_link = reverse('coupons:app', args=[''])
                 is_email_sent = send_email_notification(support_email, 'COUPONS_LIMIT_REACHED', {
-                    'course_key': course_key,
-                    'available_vouchers': remaining_vouchers_count
+                    'coupons_link': coupons_link
                 }, site)
 
                 if is_email_sent:
