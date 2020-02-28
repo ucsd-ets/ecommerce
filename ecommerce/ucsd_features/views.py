@@ -54,7 +54,7 @@ class AssignVoucherView(GenericAPIView):
                                 course_key,
                                 remaining_vouchers_count
                             ))
-                coupons_link = reverse('coupons:app', args=[''])
+                coupons_link = '{}{}'.format(settings.ECOMMERCE_URL_ROOT, reverse('coupons:app', args=['']))
                 is_email_sent = send_email_notification(support_email, 'COUPONS_LIMIT_REACHED', {
                     'coupons_link': coupons_link
                 }, site)
