@@ -4,9 +4,9 @@ Service to provide utils related to Coupons and Vouchers
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import logging
-import itertools
 
 from django.db.models import F, Q
+from django.utils import timezone
 from oscar.core.loading import get_model
 
 from ecommerce.coupons.utils import get_catalog_course_runs
@@ -15,6 +15,7 @@ from ecommerce.coupons.utils import get_catalog_course_runs
 logger = logging.getLogger(__name__)
 
 Category = get_model('catalogue', 'Category')
+Product = get_model('catalogue', 'Product')
 OfferAssignment = get_model('offer', 'OfferAssignment')
 
 
@@ -28,62 +29,67 @@ class CouponService:
         coupons = category.product_set.filter(coupon_vouchers__isnull=False)
         if options.get('only_multi_course_coupons', False):
             # For "Single Course" coupons, there is no value set for `catalog_query`
-            coupons = coupons.filter(coupon_vouchers__vouchers__offers__condition__range__catalog_query__isnull=False).distinct()
+            coupons = coupons.filter(
+                coupon_vouchers__vouchers__offers__condition__range__catalog_query__isnull=False
+            ).distinct()
         return coupons
 
     def filter_coupons_for_course_key(self, coupons_products, course_key, site=None):
         coupons = []
-        for coupon_product in coupons_products:
-            try:
-                catalog_query = (coupon_product.coupon_vouchers.first().
-                                 vouchers.first().
-                                 best_offer.condition.range.catalog_query)
-            except (KeyError, AttributeError):
-                logger.error('Could not get catalog_query for Coupon: {}'.format(coupon_product))
-                continue
-
-            response = get_catalog_course_runs(
-                site=site,
-                query=catalog_query
-            )
-            is_coupon_available_for_course = bool([
-                course_obj['key'] for course_obj in response['results'] if course_obj['key'] == course_key
-            ])
-            if is_coupon_available_for_course:
-                coupons.append(coupon_product)
+        coupons_products = coupons_products.prefetch_related(
+            'coupon_vouchers__vouchers__offers__condition__range'
+        )
+        coupons = [
+            coupon for coupon in coupons_products if
+            self._is_coupon_valid_for_course(coupon, course_key, site)
+        ]
         return coupons
 
+    def _is_coupon_valid_for_course(self, coupon, course_key, site=None):
+        try:
+            catalog_query = (coupon.coupon_vouchers.all()[0].
+                             vouchers.all()[0].
+                             best_offer.condition.range.catalog_query)
+        except (KeyError, AttributeError, IndexError):
+            logger.error('Could not get catalog_query for Coupon: {}'.format(coupon))
+            return False
+
+        response = get_catalog_course_runs(
+            site=site,
+            query=catalog_query
+        )
+        return bool([
+            course_obj.get('key') for course_obj in response['results'] if course_obj.get('key') == course_key
+        ])
+
     def get_available_vouchers(self, coupons):
-        all_available_vouchers = []
+        all_vouchers = []
+        now = timezone.now()
+
+        coupon_ids = [coupon.id for coupon in coupons]
+        coupons = Product.objects.filter(id__in=coupon_ids).prefetch_related(
+            'coupon_vouchers__vouchers'
+        )
 
         for coupon_product in coupons:
-            available_vouchers = self._get_available_vouchers_in_coupon(coupon_product)
+            coupon_vouchers = coupon_product.coupon_vouchers.all()
+            for coupon_voucher in coupon_vouchers:
+                current_vouchers = coupon_voucher.vouchers.exclude(
+                    Q(offers__offerassignment__code__iexact=F('code')) |
+                    Q(start_datetime__gt=now) |
+                    Q(end_datetime__lt=now)
+                )
 
-            if available_vouchers:
-                all_available_vouchers.extend(available_vouchers)
-
-            else:
-                # If there is no empty voucher in current coupon. Log it.
-                # Please note that this doesn't mean that there is no available voucher
-                # there may be an applicable available voucher in another coupon
-                logger.info(
-                    'Vouchers limit for coupon: {} has been reached.'
-                    ' Need to make more vouchers for the coupon'.format(coupon_product)
+                if current_vouchers:
+                    all_vouchers += list(current_vouchers)
+                else:
+                    # If there is no empty voucher in current coupon. Log it.
+                    # Please note that this doesn't mean that there is no available voucher
+                    # there may be an applicable available voucher in another coupon
+                    logger.info(
+                        'Vouchers limit for coupon: {} has been reached.'
+                        ' Need to make more vouchers for the coupon'.format(coupon_product)
                     )
-        return all_available_vouchers
-
-    def _get_available_vouchers_in_coupon(self, coupon):
-        all_vouchers = []
-        coupon_vouchers = coupon.coupon_vouchers.all()
-
-        for coupon_voucher in coupon_vouchers:
-            unassigned_vouchers = coupon_voucher.vouchers.exclude(
-                offers__offerassignment__code__iexact=F('code')
-            )
-
-            if unassigned_vouchers:
-                available_vouchers = [x for x in unassigned_vouchers if x.is_available_to_user()[0]]
-                all_vouchers.extend(available_vouchers)
 
         return all_vouchers
 
