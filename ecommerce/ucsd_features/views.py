@@ -31,11 +31,6 @@ class AssignVoucherView(GenericAPIView):
 
         category = Category.objects.get(slug='geography-promotion')
 
-        category.product_set.prefetch_related(
-            'coupon_vouchers__vouchers__offers__offerassignment_set'
-        )
-        category.product_set.prefetch_related('coupon_vouchers__vouchers__offers__conditions__range')
-
         coupon_products = coupon_service.get_coupons_by_category(category, only_multi_course_coupons=True)
         filtered_coupon_products = coupon_service.filter_coupons_for_course_key(coupon_products, course_key, site)
         available_vouchers = coupon_service.get_available_vouchers(filtered_coupon_products)
@@ -77,8 +72,8 @@ class AssignVoucherView(GenericAPIView):
 
         available_voucher = available_vouchers[0]
         offer = OfferAssignment.objects.create(offer=available_voucher.best_offer,
-                                                user_email=user_email,
-                                                code=available_voucher.code)
+                                               user_email=user_email,
+                                               code=available_voucher.code)
         logger.info('Successfully assigned voucher with code: {} to user: {} for course: {}'.format(
             available_voucher.code, user_email, course_key
         ))
@@ -88,13 +83,6 @@ class AssignVoucherView(GenericAPIView):
             course_name = course.name
         except Course.DoesNotExist:
             course_name = course_key
-
-        if course_sku:
-            course_checkout_url = '{}{}?sku={}'.format(
-                settings.ECOMMERCE_URL_ROOT, reverse('basket:basket-add'), course_sku
-            )
-        else:
-            course_checkout_url = ''
 
         try:
             send_notification(request.user, 'COUPON_ASSIGNED', {
@@ -115,7 +103,7 @@ class AssignVoucherView(GenericAPIView):
 
         except Exception as ex:     # pylint: disable=broad-except
             logger.error('Failed to send email to user {} with voucher code.'
-                            'Error message: {}'.format(user_email, str(ex)))
+                         'Error message: {}'.format(user_email, str(ex)))
 
         finally:
             return JsonResponse({}, status=200)  # pylint: disable=lost-exception
@@ -130,11 +118,9 @@ class CourseCouponView(GenericAPIView):
         if not course_key:
             logger.error('No course key provided')
             return JsonResponse({}, status=404)
+
         site = request.site
         category = Category.objects.get(slug='geography-promotion')
-        category.product_set.prefetch_related(
-            'coupon_vouchers__vouchers__offers__offerassignment_set'
-        )
 
         coupon_products = coupon_service.get_coupons_by_category(category, only_multi_course_coupons=True)
         filtered_coupon_products = coupon_service.filter_coupons_for_course_key(coupon_products, course_key, site)
