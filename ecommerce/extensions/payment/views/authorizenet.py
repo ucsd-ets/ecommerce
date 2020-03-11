@@ -16,12 +16,14 @@ from oscar.core.loading import get_class, get_model
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 
+from oscar.apps.partner import strategy
 from oscar.apps.payment.exceptions import TransactionDeclined
 from ecommerce.core.url_utils import get_lms_dashboard_url
 from ecommerce.notifications.notifications import send_notification
 from ecommerce.extensions.payment.exceptions import InvalidBasketError
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
 from ecommerce.extensions.payment.processors.authorizenet import AuthorizeNet
+from ecommerce.ucsd_features.utils import add_to_ga_events_cookie
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ OrderTotalCalculator = get_class('checkout.calculators', 'OrderTotalCalculator')
 PaymentProcessorResponse = get_model('payment', 'PaymentProcessorResponse')
 
 NOTIFICATION_TYPE_AUTH_CAPTURE_CREATED = "net.authorize.payment.authcapture.created"
+
 
 class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
     """
@@ -236,6 +239,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
         finally:
             return HttpResponse(status=200)
 
+
 def handle_redirection(request):
     """
         Handle AuthorizeNet redirection. This view will be called when a user clicks on continue button
@@ -247,9 +251,87 @@ def handle_redirection(request):
     domain = settings.ECOMMERCE_COOKIE_DOMAIN
     lms_dashboard = get_lms_dashboard_url()
     response = redirect(lms_dashboard)
+    basket_id = request.GET.get('basket')
+    course_id_hash = None
 
-    course_id_hash = request.GET.get('course')
+    try:
+        basket = Basket.objects.get(id=basket_id)
+    except Basket.DoesNotExist:
+        logger.error('Basket with ID: {basket_id} not found, cannot generete GA event.'.format(basket_id=basket_id))
+    else:
+        try:
+            ga_event = _get_ga_event(request, basket)
+        except Exception as ex:     # pylint: disable=broad-except
+            logger.exception('Error while trying to get GA event data: %s', str(ex))
+        else:
+            add_to_ga_events_cookie(request, response, 'purchase', ga_event, domain=domain)
+
+        course_id = _get_course_id_from_basket(basket)
+        course_id_hash = base64.b64encode(course_id.encode()) if course_id else ''
+
     if course_id_hash:
         response.set_cookie('pendingTransactionCourse', course_id_hash, domain=domain)
 
     return response
+
+
+def _get_ga_event(request, basket):
+    """
+    Generates dict containing data for Google Analytics "purchase" event
+
+    Arguments:
+        request: Request object
+        basket: Basket object
+
+    Returns:
+        A dict cotaining data for Google Analytics event
+    """
+    basket.strategy = strategy.Default()
+
+    ga_event = {
+        'transaction_id': basket.order_number,
+        'affiliation': request.site.name,
+        'currency': basket.currency,
+        'tax': float(basket.total_tax),
+        'shipping': 0,
+        'items': []
+    }
+
+    total_price = 0
+
+    for basket_line_item in basket._lines:
+        price = float(basket_line_item.line_price_incl_tax_incl_discounts)
+        total_price += price
+        item = {
+            'id': basket_line_item.product.stockrecords.all()[0].partner_sku,
+            'name': basket_line_item.product.course.name,
+            'brand': basket_line_item.product.course.partner.__str__(),
+            'category': '',
+            'variant': '',
+            'quantity': basket_line_item.quantity,
+            'price': price
+        }
+        ga_event['items'].append(item)
+
+    ga_event['value'] = total_price
+
+    return ga_event
+
+
+def _get_course_id_from_basket(basket):
+    """
+    Gets the course ID from the basket
+
+    Arguments:
+        basket: Basket object
+
+    Returns:
+        course_id if found in the basket, otherwise empty string
+    """
+    line_items = basket._lines
+    if line_items:
+        try:
+            return line_items[0].product.course_id
+        except (AttributeError, IndexError):
+            logger.exception('Basket %s has no line items. Could get course ID from the basket', basket)
+    return None
