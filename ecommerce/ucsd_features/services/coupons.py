@@ -1,5 +1,5 @@
 """
-Service to provide utils related to Coupons and Vouchers
+Service to provide utils related to Coupons and Vouchers.
 """
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
@@ -20,12 +20,44 @@ OfferAssignment = get_model('offer', 'OfferAssignment')
 
 
 class CouponService:
+    """
+    This service class provides methods related to coupons.
+    """
 
     def get_coupons_by_category_slug(self, category_slug, **options):
+        """
+        Returns all Product(s) (type: coupon) having provided category (determined by the slug)
+        as one of its categories.
+
+        Arguments:
+            category_slug (str): Slug of the category
+            options (dict): Extra keyword arguments
+
+            currently supported extra keyword arguments are:
+                only_multi_course_coupons (Boolean): if only Coupon Products which are of
+                                                    "Multiple Course" type should be returned
+
+        Returns:
+            Queryset<Product>: queryset containing the coupon Product(s)
+        """
         category = Category.objects.get(slug=category_slug)
         return self.get_coupons_by_category(category, **options)
 
     def get_coupons_by_category(self, category, **options):
+        """
+        Returns all Product(s) (type: coupon) having provided category as one of its categories.
+
+        Arguments:
+            category_slug (str): Slug of the category
+            options (dict): Extra keyword arguments
+
+            currently supported extra keyword arguments are:
+                only_multi_course_coupons (Boolean): if only Coupon Products which are of
+                                                    "Multiple Course" type should be returned
+
+        Returns:
+            Queryset<Product>: queryset containing the coupon Product(s)
+        """
         coupons = category.product_set.filter(coupon_vouchers__isnull=False)
         if options.get('only_multi_course_coupons', False):
             # For "Single Course" coupons, there is no value set for `catalog_query`
@@ -35,6 +67,18 @@ class CouponService:
         return coupons
 
     def filter_coupons_for_course_key(self, coupons_products, course_key, site=None):
+        """
+        Filters and returns only coupons products from the provided list that are
+        applicable on course with the provided course key.
+
+        Arguments:
+            coupon_products (queryset<Product>): queryset of coupon Products
+            course_key (str): id/course_key of the course
+            site (Site)(optional): site object
+
+        Returns:
+            List<Product>: list containing the filtered coupon Product(s)
+        """
         coupons = []
         coupons_products = coupons_products.prefetch_related(
             'coupon_vouchers__vouchers__offers__condition__range'
@@ -46,6 +90,17 @@ class CouponService:
         return coupons
 
     def _is_coupon_valid_for_course(self, coupon, course_key, site=None):
+        """
+        Determines if the coupon is applicable on the provided course_key.
+
+        Arguments:
+            coupon (Product): coupon Product
+            course_key (str): id/course_key of the course
+            site (Site): site object
+
+        Returns:
+            bool
+        """
         try:
             catalog_query = (coupon.coupon_vouchers.all()[0].
                              vouchers.all()[0].
@@ -63,6 +118,19 @@ class CouponService:
         ])
 
     def get_available_vouchers(self, coupons):
+        """
+        Returns available vouchers derived from the provided coupon Products.
+        A voucher is considered to be availabe if:
+            - voucher is not assigned to anyone
+            - voucher's start date is in the past
+            - voucher's end date is in the future (voucher is not expired)
+
+        Arguments:
+            coupons (list<Product>): list of coupon Products
+
+        Returns:
+            list<Voucher>
+        """
         all_vouchers = []
         now = timezone.now()
 
@@ -94,6 +162,16 @@ class CouponService:
         return all_vouchers
 
     def is_voucher_available_for_user(self, voucher, user):
+        """
+        Determines if the provided voucher is available to be used by the user.
+
+        Arguments:
+            voucher (Voucher): voucher object
+            user (User): user object
+
+        Returns:
+            bool
+        """
         user_email = user.email
         user_assigned_offers = voucher.best_offer.offerassignment_set.filter(
             Q(user_email__isnull=False) & Q(code=voucher.code)
