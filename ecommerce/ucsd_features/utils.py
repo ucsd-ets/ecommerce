@@ -15,7 +15,11 @@ Dispatcher = get_class('customer.utils', 'Dispatcher')
 
 def send_email_notification(email, commtype_code, context, site=None):
     """
-        Send email to provided email
+    Send email to the provided email address.
+
+    Arguments:
+        email (str): email address of receiver
+        commtype_code (str): code to determine the email template
     """
     if not email:
         logger.error('No email provided for sending the email to. Cannot send the email')

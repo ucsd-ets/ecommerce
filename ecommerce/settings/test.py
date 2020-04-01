@@ -184,7 +184,7 @@ TEMPLATE_DEBUG = False
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 BROKER_BACKEND = 'memory'
 
-#SAILTHRU settings
+# SAILTHRU settings
 SAILTHRU_KEY = 'abc123'
 SAILTHRU_SECRET = 'top_secret'
 
@@ -193,3 +193,16 @@ ECOMMERCE_COOKIE_DOMAIN = "test.edu"
 
 # Ecommerce support email
 ECOMMERCE_SUPPORT_EMAIL = "test@gmail.com"
+
+
+############ UCSDFeatures ############
+
+ECOMMERCE_URL_ROOT = 'http://ecommerce.test'
+
+# Geography based discount feature
+GEOGRAPHY_DISCOUNT_MIN_VOUCHERS_LIMIT = 5
+
+# Google Analytics
+GOOGLE_ANALYTICS_EVENTS_COOKIE_NAME = 'ga_cookie'
+
+ORDER_NUMBER_PREFIX = 'TEST_'
