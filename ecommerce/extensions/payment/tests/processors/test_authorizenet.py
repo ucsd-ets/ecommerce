@@ -35,6 +35,8 @@ from ecommerce.extensions.test.constants import (
 from ecommerce.extensions.payment.utils import LxmlObjectJsonEncoder
 from ecommerce.extensions.payment.processors.authorizenet import AuthorizeNet
 from ecommerce.extensions.payment.tests.processors.mixins import PaymentProcessorTestCaseMixin
+from ecommerce.extensions.test.factories import create_order
+
 
 CommunicationEventType = get_model('customer', 'CommunicationEventType')
 
@@ -82,12 +84,9 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
         """
             Verify the processor returns the required Authorize Net (sdk) setting object properly
         """
-        course_id = self.basket.all_lines()[0].product.course_id
-        course_id_hash = base64.b64encode(course_id.encode())
-
         redirect_url = reverse('authorizenet:redirect')
         ecommerce_base_url = get_ecommerce_url()
-        return_url = '{}{}?course={}'.format(ecommerce_base_url, redirect_url, course_id_hash)
+        return_url = '{}{}?basket={}'.format(ecommerce_base_url, redirect_url, self.basket.id)
 
         payment_button_expected_setting_name = apicontractsv1.settingNameEnum.hostedPaymentButtonOptions
         payment_button_expected_setting_value = json.dumps({'text': 'Pay'})
@@ -151,8 +150,18 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
         """
             Test for send_refund_failure_notification function success scenerio.
         """
+        order = create_order(basket=self.basket)
+        refund = self.create_refund(order=order)
+
         error_code = '1'
         error_message = 'test_error_message'
+
+        base_url = '{}/dashboard'.format(settings.ECOMMERCE_URL_ROOT)
+        order_url = '{}/orders/{}/'.format(base_url, self.basket.order_number)
+        refund_url = '{}/refunds/{}/'.format(
+            base_url,
+            refund.id
+        )
         expected_commtype_code = self.commtype_code
         expected_learner = self.basket.owner
         expected_site = self.basket.site
@@ -168,6 +177,9 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
             'error_code': error_code,
             'error_message': error_message,
             'reference_number': self.transaction_id,
+            'order_date': order.date_placed.strftime('%c'),
+            'order_url': order_url,
+            'refund_url': refund_url
         }
         self.processor._send_email_notification_to_support = MagicMock()
         self.processor._send_refund_failure_notification(self.transaction_id, error_code, error_message, self.basket)
@@ -182,7 +194,7 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
         """
         expected_line_item = self.basket.all_lines()[0]
         expected_line_item_unit_price = (expected_line_item.line_price_incl_tax_incl_discounts /
-            expected_line_item.quantity)
+                                         expected_line_item.quantity)
         expected_custom_line_id = "{}_{}".format(self.basket.order_number, expected_line_item.product.id)
 
         actual_line_items_list = self.processor._get_authorizenet_lineitems(self.basket)
