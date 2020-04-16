@@ -5,7 +5,7 @@ import logging
 from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
-from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
 from oscar.core.loading import get_model
 
 from ecommerce.notifications.notifications import send_notification
@@ -22,12 +22,10 @@ Course = get_model('courses', 'Course')
 coupon_service = CouponService()
 
 
-class AssignVoucherView(GenericAPIView):
+class AssignVoucherView(APIView):
     """
     View to assign voucher to a user.
     """
-
-    http_method_names = ['POST']
 
     def post(self, request):
         """
@@ -124,12 +122,10 @@ class AssignVoucherView(GenericAPIView):
             return JsonResponse({}, status=200)  # pylint: disable=lost-exception
 
 
-class CourseCouponView(GenericAPIView):
+class CourseCouponView(APIView):
     """
     View to check if a course has applicable coupons or not.
     """
-
-    http_method_names = ['POST']
 
     def post(self, request):
         """
