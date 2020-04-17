@@ -378,13 +378,21 @@ class AuthorizeNetNotificationViewTests(PaymentEventsMixin, TestCase):
 class AuthorizeNetRedirectionViewTests(TestCase):
     path = reverse('authorizenet:redirect')
 
+    def setUp(self):
+        super(AuthorizeNetRedirectionViewTests, self).setUp()
+        self.user = self.create_user()
+        self.course = CourseFactory(partner=self.partner)
+        self.product = self.course.create_or_update_seat('verified', True, 100)
+        self.basket = factories.BasketFactory(owner=self.user, site=self.site)
+        self.basket.add_product(self.product, 1)
+        self.basket.freeze()
+
     def test_handle_redirection(self):
         """
             Verify redirection with proper cookie.
         """
-        expected_course_id = "fake_course_id"
-        course_id_hash = base64.b64encode(expected_course_id.encode())
-        url = '{}?course={}'.format(self.path, course_id_hash )
+        expected_course_id = str(self.course.id)
+        url = '{}?basket={}'.format(self.path, self.basket.id )
         response = self.client.get(url)
 
         actual_course_id_hash = response.cookies.get('pendingTransactionCourse').value
