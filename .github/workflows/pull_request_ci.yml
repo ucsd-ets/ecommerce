@@ -1,0 +1,112 @@
+name: Python and Quality Tests
+
+on:
+  pull_request:
+    branches: [ 'develop', 'master', 'release-candidate' ]
+env:
+  OPENEDX_RELEASE: 'ironwood.master'
+jobs:
+  translations-validations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup docker containers
+        run: |
+          docker-compose -f .github/docker-compose-github.yml up -d
+      - name: Install requirements.js
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make requirements.js'
+      - name: run check_translations_up_to_date
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make check_translations_up_to_date'
+      - name: run validate_translations
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make validate_translations'
+
+  quality-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup docker containers
+        run: |
+          docker-compose -f .github/docker-compose-github.yml up -d
+      - name: Install requirements
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make requirements'
+      - name: Generate HTML docs
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/docs &&
+          make html'
+      - name: Clean static assets
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make clean_static'
+      - name: Generate static assets
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make static'
+      - name: Test quality
+        if: always()
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          make quality'
+      - name: Validate JS
+        if: always()
+        run: |
+          docker exec -t ecommerce_testing bash -c '
+          export PATH=$PATH:/edx/app/ecommerce/nodeenvs/ecommerce/bin:/snap/bin &&
+          source /edx/app/ecommerce/ecommerce_env &&
+          cd /edx/app/ecommerce/ecommerce/ &&
+          xvfb-run make validate_js'
+
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup docker containers
+      run: |
+        docker-compose -f .github/docker-compose-github.yml up -d
+    - name: Install requirements
+      run: |
+        docker exec -t ecommerce_testing bash -c '
+        source /edx/app/ecommerce/ecommerce_env &&
+        cd /edx/app/ecommerce/ecommerce/ &&
+        make requirements'
+    - name: Clean static assets
+      run: |
+        docker exec -t ecommerce_testing bash -c '
+        source /edx/app/ecommerce/ecommerce_env &&
+        cd /edx/app/ecommerce/ecommerce/ &&
+        make clean_static'
+    - name: Generate static assets
+      run: |
+        docker exec -t ecommerce_testing bash -c '
+        source /edx/app/ecommerce/ecommerce_env &&
+        cd /edx/app/ecommerce/ecommerce/ &&
+        DJANGO_SETTINGS_MODULE=ecommerce.settings.test make static'
+    - name: Run the python tests
+      run: |
+        docker exec -t ecommerce_testing bash -c '
+        source /edx/app/ecommerce/ecommerce_env &&
+        cd /edx/app/ecommerce/ecommerce/ &&
+        TRAVIS=1 DJANGO_SETTINGS_MODULE=ecommerce.settings.test xvfb-run make validate_python'
