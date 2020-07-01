@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import logging
 
 from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
-from rest_framework.views import APIView
 from oscar.core.loading import get_model
+from rest_framework.views import APIView
 
-from ecommerce.notifications.notifications import send_notification
 from ecommerce.extensions.offer.constants import OFFER_ASSIGNED
+from ecommerce.notifications.notifications import send_notification
+from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPON_ASSIGNED, COUPONS_LIMIT_REACHED
 from ecommerce.ucsd_features.services.coupons import CouponService
 from ecommerce.ucsd_features.utils import send_email_notification
-from ecommerce.ucsd_features.constants import COUPONS_LIMIT_REACHED, COUPON_ASSIGNED, CATEGORY_GEOGRAPHY_PROMOTION_SLUG
 
 logger = logging.getLogger(__name__)
 

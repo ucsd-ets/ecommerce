@@ -5,18 +5,15 @@ import base64
 import json
 
 import ddt
-
-from mock import patch, MagicMock, ANY, call
 from django.conf import settings
-from premailer import transform
+from mock import ANY, MagicMock, call, patch
 from oscar.core.loading import get_model
+from premailer import transform
 
 from ecommerce.tests.testcases import TestCase
-
-from ecommerce.ucsd_features.utils import send_email_notification, add_to_ga_events_cookie
-from ecommerce.ucsd_features.constants import COUPONS_LIMIT_REACHED, COUPON_ASSIGNED
+from ecommerce.ucsd_features.constants import COUPON_ASSIGNED, COUPONS_LIMIT_REACHED
 from ecommerce.ucsd_features.tests.fixtures import COMMUNICATION_EVENT_TYPE_FIXTURE
-
+from ecommerce.ucsd_features.utils import add_to_ga_events_cookie, send_email_notification
 
 CommunicationEventType = get_model('customer', 'CommunicationEventType')
 

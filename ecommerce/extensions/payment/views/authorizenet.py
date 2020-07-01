@@ -5,24 +5,25 @@ from __future__ import unicode_literals
 import base64
 import json
 import logging
+
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from oscar.apps.partner import strategy
-from rest_framework.views import APIView
 from django.utils.decorators import method_decorator
-from oscar.core.loading import get_class, get_model
 from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
 
 from oscar.apps.partner import strategy
 from oscar.apps.payment.exceptions import TransactionDeclined
+from oscar.core.loading import get_class, get_model
+from rest_framework.views import APIView
+
 from ecommerce.core.url_utils import get_lms_dashboard_url
-from ecommerce.notifications.notifications import send_notification
-from ecommerce.extensions.payment.exceptions import InvalidBasketError
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
+from ecommerce.extensions.payment.exceptions import InvalidBasketError
 from ecommerce.extensions.payment.processors.authorizenet import AuthorizeNet
+from ecommerce.notifications.notifications import send_notification
 from ecommerce.ucsd_features.utils import add_to_ga_events_cookie
 
 logger = logging.getLogger(__name__)

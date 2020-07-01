@@ -63,7 +63,6 @@ class OrderNumberGenerator(object):
             order_prefix = partner.short_code
         return u'{prefix}-{order_id}'.format(prefix=order_prefix.upper(), order_id=order_id)
 
-
     def basket_id(self, order_number):
         """Inverse of order number generation.
 

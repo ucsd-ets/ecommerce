@@ -4,18 +4,17 @@ Tests for the views in UCSDFeatures app.
 import datetime
 import json
 
-from mock import patch
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
+from mock import patch
 from oscar.core.loading import get_model
 
 from ecommerce.coupons.tests.mixins import CouponMixin
 from ecommerce.extensions.catalogue.tests.mixins import DiscoveryTestMixin
 from ecommerce.extensions.offer.constants import OFFER_ASSIGNED
 from ecommerce.tests.testcases import TestCase
-
-from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPONS_LIMIT_REACHED, COUPON_ASSIGNED
+from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPON_ASSIGNED, COUPONS_LIMIT_REACHED
 
 
 Category = get_model('catalogue', 'Category')
