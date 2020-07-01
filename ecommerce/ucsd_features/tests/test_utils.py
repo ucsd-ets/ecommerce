@@ -6,7 +6,7 @@ import json
 
 import ddt
 
-from mock import patch, MagicMock, ANY
+from mock import patch, MagicMock, ANY, call
 from django.conf import settings
 from premailer import transform
 from oscar.core.loading import get_model
@@ -33,7 +33,7 @@ class UtilsSendEmailNotificationTests(TestCase):
         """
         expected_error_message = 'No email provided for sending the email to. Cannot send the email'
 
-        return_value = send_email_notification(email=None, commtype_code='NOT_USED', context={})
+        return_value = send_email_notification(support_emails=[], commtype_code='NOT_USED', context={})
         self.assertFalse(return_value)
         mocked_logger_error.assert_called_once_with(expected_error_message)
 
@@ -45,12 +45,12 @@ class UtilsSendEmailNotificationTests(TestCase):
         at get_and_render call.
         """
         commtype_code = 'INVALID_COMMTYPE_CODE'
-        email = 'test@example.com'
+        support_emails = ['test@example.com']
 
         expected_error_message = ('Unable to locate a DB entry or templates for communication type [%s].'
                                   ' No notification has been sent.')
 
-        return_value = send_email_notification(email=email, commtype_code=commtype_code, context={})
+        return_value = send_email_notification(support_emails=support_emails, commtype_code=commtype_code, context={})
         self.assertEqual(return_value, None)
         mocked_logger_error.assert_called_once_with(expected_error_message, commtype_code)
 
@@ -60,11 +60,11 @@ class UtilsSendEmailNotificationTests(TestCase):
         at get_and_render call.
         """
         commtype_code = 'INVALID_COMMTYPE_CODE'
-        email = 'test@example.com'
+        support_emails = ['test@example.com']
         expected_exception = 'Could not get some of the required values for the email'
 
         with self.assertRaises(Exception) as ex:
-            return_value = send_email_notification(email=email, commtype_code=commtype_code, context={})
+            return_value = send_email_notification(support_emails=support_emails, commtype_code=commtype_code, context={})
             self.assertEqual(return_value, None)
 
         self.assertEqual(ex.exception.message, expected_exception)
@@ -81,16 +81,19 @@ class UtilsSendEmailNotificationTests(TestCase):
         Since theme is not enabled for the tests, we will use a fixture as the return value of the
         `get_and_render` call
         """
-        email = 'test@example.com'
+        support_emails = ['test@example.com', 'test1@example.com']
         context = {}
 
         expected_messages = COMMUNICATION_EVENT_TYPE_FIXTURE
         expected_messages['html'] = transform(expected_messages.get('html'))
 
-        return_value = send_email_notification(email=email, commtype_code=commtype_code, context=context)
+        return_value = send_email_notification(support_emails=support_emails, commtype_code=commtype_code,
+                                               context=context)
+
+        calls = [call(email, expected_messages, ANY) for email in support_emails]
 
         self.assertEqual(return_value, True)
-        mocked_dispatcher_call.assert_called_once_with(email, expected_messages, ANY)
+        mocked_dispatcher_call.assert_has_calls(calls)
 
 
 class UtilsGAEventsTests(TestCase):

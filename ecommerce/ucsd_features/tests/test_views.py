@@ -164,12 +164,12 @@ class AssignVoucherViewTestCases(ViewsTestBaseMixin):
         # Test that email is sent to support if available vouchers are less
         # than GEOGRAPHY_DISCOUNT_MIN_VOUCHERS_LIMIT
         logged_message = ('Sent an email to support ({}) to notify that course coupons'
-                          ' limit has been reached for course: {}'.format(settings.ECOMMERCE_SUPPORT_EMAIL,
+                          ' limit has been reached for course: {}'.format(settings.ECOMMERCE_SUPPORT_EMAILS,
                                                                           self.course.id))
         mocked_logger.info.assert_called_with(logged_message)
 
         coupons_link = '{}{}'.format(settings.ECOMMERCE_URL_ROOT, reverse('coupons:app', args=['']))
-        mocked_send_email_notification.assert_called_with(settings.ECOMMERCE_SUPPORT_EMAIL, COUPONS_LIMIT_REACHED, {
+        mocked_send_email_notification.assert_called_with(settings.ECOMMERCE_SUPPORT_EMAILS, COUPONS_LIMIT_REACHED, {
             'coupons_link': coupons_link,
             'course_id': self.course.id
         }, self.site)

@@ -13,15 +13,15 @@ CommunicationEventType = get_model('customer', 'CommunicationEventType')
 Dispatcher = get_class('customer.utils', 'Dispatcher')
 
 
-def send_email_notification(email, commtype_code, context, site=None):
+def send_email_notification(support_emails, commtype_code, context, site=None):
     """
     Send email to the provided email address.
 
     Arguments:
-        email (str): email address of receiver
+        support_emails (list): email addresses of receiver
         commtype_code (str): code to determine the email template
     """
-    if not email:
+    if not support_emails:
         logger.error('No email provided for sending the email to. Cannot send the email')
         return False
 
@@ -41,7 +41,8 @@ def send_email_notification(email, commtype_code, context, site=None):
         messages['html'] = transform(messages.get('html'))
 
     if messages and messages.get('body') and messages.get('subject'):
-        Dispatcher().send_email_messages(email, messages, site)
+        for email in support_emails:
+            Dispatcher().send_email_messages(email, messages, site)
         return True
 
     raise Exception('Could not get some of the required values for the email')
