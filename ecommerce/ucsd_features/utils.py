@@ -3,9 +3,8 @@ import json
 import logging
 
 from django.conf import settings
-from oscar.core.loading import get_model, get_class
+from oscar.core.loading import get_class, get_model
 from premailer import transform
-
 
 logger = logging.getLogger(__name__)
 PaymentProcessorResponse = get_model('payment', 'PaymentProcessorResponse')
@@ -13,15 +12,15 @@ CommunicationEventType = get_model('customer', 'CommunicationEventType')
 Dispatcher = get_class('customer.utils', 'Dispatcher')
 
 
-def send_email_notification(email, commtype_code, context, site=None):
+def send_email_notification(support_emails, commtype_code, context, site=None):
     """
     Send email to the provided email address.
 
     Arguments:
-        email (str): email address of receiver
+        support_emails (list): email addresses of receivers
         commtype_code (str): code to determine the email template
     """
-    if not email:
+    if not support_emails:
         logger.error('No email provided for sending the email to. Cannot send the email')
         return False
 
@@ -41,7 +40,8 @@ def send_email_notification(email, commtype_code, context, site=None):
         messages['html'] = transform(messages.get('html'))
 
     if messages and messages.get('body') and messages.get('subject'):
-        Dispatcher().send_email_messages(email, messages, site)
+        for email in support_emails:
+            Dispatcher().send_email_messages(email, messages, site)
         return True
 
     raise Exception('Could not get some of the required values for the email')

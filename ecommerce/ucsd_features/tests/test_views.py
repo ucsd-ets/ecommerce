@@ -4,18 +4,17 @@ Tests for the views in UCSDFeatures app.
 import datetime
 import json
 
-from mock import patch
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
+from mock import patch
 from oscar.core.loading import get_model
 
 from ecommerce.coupons.tests.mixins import CouponMixin
 from ecommerce.extensions.catalogue.tests.mixins import DiscoveryTestMixin
 from ecommerce.extensions.offer.constants import OFFER_ASSIGNED
 from ecommerce.tests.testcases import TestCase
-
-from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPONS_LIMIT_REACHED, COUPON_ASSIGNED
+from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPON_ASSIGNED, COUPONS_LIMIT_REACHED
 
 
 Category = get_model('catalogue', 'Category')
@@ -164,12 +163,12 @@ class AssignVoucherViewTestCases(ViewsTestBaseMixin):
         # Test that email is sent to support if available vouchers are less
         # than GEOGRAPHY_DISCOUNT_MIN_VOUCHERS_LIMIT
         logged_message = ('Sent an email to support ({}) to notify that course coupons'
-                          ' limit has been reached for course: {}'.format(settings.ECOMMERCE_SUPPORT_EMAIL,
+                          ' limit has been reached for course: {}'.format(settings.ECOMMERCE_SUPPORT_EMAILS,
                                                                           self.course.id))
         mocked_logger.info.assert_called_with(logged_message)
 
         coupons_link = '{}{}'.format(settings.ECOMMERCE_URL_ROOT, reverse('coupons:app', args=['']))
-        mocked_send_email_notification.assert_called_with(settings.ECOMMERCE_SUPPORT_EMAIL, COUPONS_LIMIT_REACHED, {
+        mocked_send_email_notification.assert_called_with(settings.ECOMMERCE_SUPPORT_EMAILS, COUPONS_LIMIT_REACHED, {
             'coupons_link': coupons_link,
             'course_id': self.course.id
         }, self.site)

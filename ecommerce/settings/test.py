@@ -192,7 +192,7 @@ SAILTHRU_SECRET = 'top_secret'
 ECOMMERCE_COOKIE_DOMAIN = "test.edu"
 
 # Ecommerce support email
-ECOMMERCE_SUPPORT_EMAIL = "test@gmail.com"
+ECOMMERCE_SUPPORT_EMAILS = ["test@gmail.com"]
 
 
 ############ UCSDFeatures ############

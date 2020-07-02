@@ -1,9 +1,9 @@
 import json
-import lxml
 import logging
 import re
 from urllib import urlencode
 
+import lxml
 import requests
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -21,7 +21,7 @@ class LxmlObjectJsonEncoder(json.JSONEncoder):
     """
        A specialized JSON encoder that can handle lxml objectify types
     """
-    def default(self,o):
+    def default(self, o):
         if isinstance(o, lxml.objectify.IntElement):
             return int(o)
         if isinstance(o, lxml.objectify.NumberElement) or isinstance(o, lxml.objectify.FloatElement):
