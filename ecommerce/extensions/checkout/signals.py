@@ -9,7 +9,6 @@ from ecommerce.courses.utils import mode_for_product
 from ecommerce.extensions.analytics.utils import silence_exceptions, track_segment_event
 from ecommerce.extensions.checkout.utils import get_credit_provider_details, get_receipt_page_url
 from ecommerce.notifications.notifications import send_notification
-from ecommerce.courses.utils import  mode_for_product
 from ecommerce.programs.utils import get_program
 
 BasketAttribute = get_model('basket', 'BasketAttribute')

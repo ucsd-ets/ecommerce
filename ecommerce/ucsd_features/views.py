@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import logging
 
 from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
-from rest_framework.views import APIView
 from oscar.core.loading import get_model
+from rest_framework.views import APIView
 
-from ecommerce.notifications.notifications import send_notification
 from ecommerce.extensions.offer.constants import OFFER_ASSIGNED
+from ecommerce.notifications.notifications import send_notification
+from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPON_ASSIGNED, COUPONS_LIMIT_REACHED
 from ecommerce.ucsd_features.services.coupons import CouponService
 from ecommerce.ucsd_features.utils import send_email_notification
-from ecommerce.ucsd_features.constants import COUPONS_LIMIT_REACHED, COUPON_ASSIGNED, CATEGORY_GEOGRAPHY_PROMOTION_SLUG
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class AssignVoucherView(APIView):
         course_key = request.data.get('course_key')
         course_sku = request.data.get('course_sku')
         user_email = request.data.get('user_email')
+        support_emails = []
         site = request.site
 
         category = Category.objects.get(slug=CATEGORY_GEOGRAPHY_PROMOTION_SLUG)
@@ -53,28 +55,30 @@ class AssignVoucherView(APIView):
 
         if remaining_vouchers_count < settings.GEOGRAPHY_DISCOUNT_MIN_VOUCHERS_LIMIT:
             try:
-                support_email = settings.ECOMMERCE_SUPPORT_EMAIL
+                support_emails = settings.ECOMMERCE_SUPPORT_EMAILS
 
                 logger.info('Sending email to support ({}) to notify that course coupons'
                             ' limit has been reached for course: {}. Available vouchers: {}'.format(
-                                support_email,
+                                support_emails,
                                 course_key,
                                 remaining_vouchers_count
                             ))
                 coupons_link = '{}{}'.format(settings.ECOMMERCE_URL_ROOT, reverse('coupons:app', args=['']))
-                is_email_sent = send_email_notification(support_email, COUPONS_LIMIT_REACHED, {
+                is_email_sent = send_email_notification(support_emails, COUPONS_LIMIT_REACHED, {
                     'coupons_link': coupons_link,
                     'course_id': course_key
                 }, site)
 
                 if is_email_sent:
                     logger.info('Sent an email to support ({}) to notify that course coupons'
-                                ' limit has been reached for course: {}'.format(support_email, course_key))
-
+                                ' limit has been reached for course: {}'.format(support_emails, course_key))
+            except AttributeError:
+                logger.error('Settings has no Attribute `ECOMMERCE_SUPPORT_EMAILS` therefore unable to notify the '
+                             'support about coupon exhaustion for course: {}'.format(course_key))
             except Exception as ex:     # pylint: disable=broad-except
                 logger.error('Failed to email to support ({}) to notify that course coupons'
                              ' limit has been reached for course: {}\nError: {}'.format(
-                                 support_email, course_key, ex.message))
+                                 support_emails, course_key, ex.message))
 
         if remaining_vouchers_count == 0:
             logger.exception('Vouchers count for course: {} is 0'

@@ -5,38 +5,37 @@ from authorizenet import apicontractsv1
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
-from lxml import objectify, etree
-from mock import patch, MagicMock
+from lxml import etree, objectify
+from mock import MagicMock, patch
 from oscar.core.loading import get_model
 from premailer import transform
 
-from ecommerce.tests.testcases import TestCase
 from ecommerce.core.url_utils import get_ecommerce_url
 from ecommerce.extensions.payment.exceptions import (
-    RefundError,
-    UnSettledTransaction,
     MissingTransactionDetailError,
     PaymentProcessorResponseNotFound,
+    RefundError,
+    UnSettledTransaction
 )
-from ecommerce.extensions.test.factories import create_order
+from ecommerce.extensions.payment.processors.authorizenet import AuthorizeNet
+from ecommerce.extensions.payment.tests.processors.mixins import PaymentProcessorTestCaseMixin
+from ecommerce.extensions.payment.utils import LxmlObjectJsonEncoder
 from ecommerce.extensions.test.authorizenet_utils import (
     get_authorizenet_refund_reponse_xml,
     get_authorizenet_transaction_reponse_xml,
-    record_transaction_detail_processor_response,
+    record_transaction_detail_processor_response
 )
 from ecommerce.extensions.test.constants import (
+    hosted_payment_token_response_template,
     refund_error_response,
     refund_success_response,
     transaction_detail_response_error_data,
-    hosted_payment_token_response_template,
     transaction_detail_response_success_data,
     unsettled_transaction_refund_error_response
 )
-from ecommerce.extensions.payment.utils import LxmlObjectJsonEncoder
-from ecommerce.extensions.payment.processors.authorizenet import AuthorizeNet
-from ecommerce.extensions.payment.tests.processors.mixins import PaymentProcessorTestCaseMixin
-from ecommerce.extensions.test.factories import create_order
 
+from ecommerce.extensions.test.factories import create_order
+from ecommerce.tests.testcases import TestCase
 
 CommunicationEventType = get_model('customer', 'CommunicationEventType')
 

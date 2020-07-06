@@ -227,7 +227,7 @@ class Refund(StatusMixin, TimeStampedModel):
         amount = format_currency(self.currency, self.total_credit_excl_tax)
         if waffle.switch_is_active('sailthru_enable'):
             send_course_refund_email.delay(self.user.email, self.id, amount, course_name, order_number,
-                                       order_url, site_code=site_code)
+                                           order_url, site_code=site_code)
             logger.info('Course refund notification scheduled for Refund [%d].', self.id)
         else:
             send_notification(
