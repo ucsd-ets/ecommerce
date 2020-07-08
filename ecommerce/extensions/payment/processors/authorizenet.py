@@ -4,39 +4,36 @@ from __future__ import absolute_import, unicode_literals
 import base64
 import json
 import logging
+from decimal import Decimal
 
 from authorizenet import apicontractsv1
-from authorizenet.constants import constants
 from authorizenet.apicontrollers import (
+    createTransactionController,
     getHostedPaymentPageController,
-    getTransactionDetailsController,
-    createTransactionController
+    getTransactionDetailsController
 )
+from authorizenet.constants import constants
 from django.conf import settings as django_settings
-from decimal import Decimal
 from django.urls import reverse
-from oscar.core.loading import get_model, get_class
 from oscar.apps.payment.exceptions import GatewayError
+from oscar.core.loading import get_class, get_model
 from premailer import transform
 
+from ecommerce.core.url_utils import get_ecommerce_url, get_lms_dashboard_url
 from ecommerce.extensions.payment.exceptions import (
-    RefundError,
-    PaymentProcessorResponseNotFound,
     MissingProcessorResponseCardInfo,
     MissingTransactionDetailError,
+    PaymentProcessorResponseNotFound,
+    RefundError,
     UnSettledTransaction
 )
-from ecommerce.extensions.payment.processors import (
-    BaseClientSidePaymentProcessor,
-    HandledProcessorResponse
-)
-from ecommerce.core.url_utils import get_ecommerce_url, get_lms_dashboard_url
+from ecommerce.extensions.payment.processors import BaseClientSidePaymentProcessor, HandledProcessorResponse
 from ecommerce.extensions.payment.utils import LxmlObjectJsonEncoder
 
 logger = logging.getLogger(__name__)
 PaymentProcessorResponse = get_model('payment', 'PaymentProcessorResponse')
 CommunicationEventType = get_model('customer', 'CommunicationEventType')
-Refund=get_model('refund','Refund')
+Refund = get_model('refund', 'Refund')
 Order = get_model('order', 'Order')
 Dispatcher = get_class('customer.utils', 'Dispatcher')
 
@@ -115,7 +112,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
                 messages = CommunicationEventType.objects.get_and_render(commtype_code, context)
             except Exception:  # pylint: disable=broad-except
                 logger.error('Unable to locate a DB entry or templates for communication type [%s]. '
-                        'No notification has been sent.', commtype_code)
+                             'No notification has been sent.', commtype_code)
                 return
         else:
             messages = event_type.get_messages(context)
@@ -145,7 +142,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         order_date = order.date_placed.strftime('%c')
 
         context = {
-            'learner_name':  learner.get_full_name(),
+            'learner_name': learner.get_full_name(),
             'learner_email': learner.email,
             'site_domain': site.domain,
             'platform_name': site.name,
@@ -382,7 +379,7 @@ class AuthorizeNet(BaseClientSidePaymentProcessor):
         transaction_request.transactionType = "refundTransaction"
         transaction_request.amount = amount
 
-        transaction_request.refTransId = reference_number # set refTransId to transId of a settled transaction
+        transaction_request.refTransId = reference_number  # set refTransId to transId of a settled transaction
         transaction_request.payment = payment
 
         create_transaction_request = apicontractsv1.createTransactionRequest()

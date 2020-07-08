@@ -1,8 +1,6 @@
 from django.conf.urls import include, url
 
-from ecommerce.extensions.payment.views import (
-    PaymentFailedView, SDNFailure, cybersource, paypal, stripe, authorizenet
-)
+from ecommerce.extensions.payment.views import PaymentFailedView, SDNFailure, authorizenet, cybersource, paypal, stripe
 
 CYBERSOURCE_APPLE_PAY_URLS = [
     url(r'^authorize/$', cybersource.CybersourceApplePayAuthorizationView.as_view(), name='authorize'),

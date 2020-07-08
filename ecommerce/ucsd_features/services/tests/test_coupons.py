@@ -6,13 +6,11 @@ import datetime
 from mock import patch
 from oscar.core.loading import get_model
 
-from ecommerce.extensions.catalogue.tests.mixins import DiscoveryTestMixin
 from ecommerce.coupons.tests.mixins import CouponMixin
+from ecommerce.extensions.catalogue.tests.mixins import DiscoveryTestMixin
 from ecommerce.tests.testcases import TestCase
-
 from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG
 from ecommerce.ucsd_features.services.coupons import CouponService
-
 
 coupons_service = CouponService()
 Category = get_model('catalogue', 'Category')
