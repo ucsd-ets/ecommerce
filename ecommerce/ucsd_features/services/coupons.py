@@ -19,7 +19,7 @@ Product = get_model('catalogue', 'Product')
 OfferAssignment = get_model('offer', 'OfferAssignment')
 
 
-class CouponService:
+class CouponService(object):
     """
     This service class provides methods related to coupons.
     """
@@ -106,7 +106,7 @@ class CouponService:
                              vouchers.all()[0].
                              best_offer.condition.range.catalog_query)
         except (KeyError, AttributeError, IndexError):
-            logger.error('Could not get catalog_query for Coupon: {}'.format(coupon))
+            logger.error('Could not get catalog_query for Coupon: %s', coupon)
             return False
 
         response = get_catalog_course_runs(
@@ -155,8 +155,8 @@ class CouponService:
                     # Please note that this doesn't mean that there is no available voucher
                     # there may be an applicable available voucher in another coupon
                     logger.info(
-                        'Vouchers limit for coupon: {} has been reached.'
-                        ' Need to make more vouchers for the coupon'.format(coupon_product)
+                        'Vouchers limit for coupon: %s has been reached.'
+                        ' Need to make more vouchers for the coupon', coupon_product
                     )
 
         return all_vouchers

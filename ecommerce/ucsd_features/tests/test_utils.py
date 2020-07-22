@@ -61,7 +61,8 @@ class UtilsSendEmailNotificationTests(TestCase):
         expected_exception = 'Could not get some of the required values for the email'
 
         with self.assertRaises(Exception) as ex:
-            return_value = send_email_notification(support_emails=support_emails, commtype_code=commtype_code, context={})
+            return_value = send_email_notification(
+                support_emails=support_emails, commtype_code=commtype_code, context={})
             self.assertEqual(return_value, None)
 
         self.assertEqual(ex.exception.message, expected_exception)
