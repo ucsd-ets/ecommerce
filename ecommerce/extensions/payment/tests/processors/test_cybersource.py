@@ -123,7 +123,7 @@ class CybersourceTests(CybersourceMixin, PaymentProcessorTestCaseMixin, TestCase
         basket.add_product(product)
 
         response = self.processor.get_transaction_parameters(basket)
-        self.assertEqual(response['item_0_name'], 'Seat in Course with quotes with test-certificate-type certificate')
+        self.assertEqual(response['item_0_name'], 'Seat in Course with quotes with Statement of Accomplishment')
 
     @ddt.data('card_type', 'card_number', 'card_expiry_date', 'card_cvn')
     def test_get_transaction_parameters_with_unpermitted_parameters(self, field):

@@ -435,7 +435,7 @@ class CouponMixin(SiteMixin):
                       client=None, code='', course_seat_types=None, email_domains=None, enterprise_customer=None,
                       enterprise_customer_catalog=None, max_uses=None, note=None, partner=None, price=100, quantity=5,
                       title='Test coupon', voucher_type=Voucher.SINGLE_USE, course_catalog=None, program_uuid=None,
-                      start_datetime=datetime.datetime(2015, 1, 1), end_datetime=datetime.datetime(2020, 1, 1)):
+                      start_datetime=datetime.datetime(2015, 1, 1), end_datetime=datetime.datetime(2030, 1, 1)):
         """Helper method for creating a coupon.
 
         Arguments:

@@ -63,7 +63,7 @@ class SignalTests(ProgramTestMixin, CouponMixin, TestCase):
         return data
 
     @httpretty.activate
-    def test_post_checkout_callback(self):
+    def test_post_checkout_callback_credit(self):
         """
         When the post_checkout signal is emitted, the receiver should attempt
         to fulfill the newly-placed order and send receipt email.
@@ -103,7 +103,61 @@ class SignalTests(ProgramTestMixin, CouponMixin, TestCase):
             '\nThe {platform_name} team'
             '\n\nYou received this message because you purchased credit hours for {course_title}, '
             'an {platform_name} course.\n'.format(
-                course_title=order.lines.first().product.title,
+                course_title=order.lines.first().product.course.name,
+                full_name=self.user.get_full_name(),
+                credit_hours=2,
+                credit_provider_name=credit_provider_name,
+                platform_name=self.site.name,
+                receipt_url=get_receipt_page_url(
+                    order_number=order.number,
+                    site_configuration=order.site.siteconfiguration
+                )
+            )
+        )
+
+    @httpretty.activate
+    def test_post_checkout_callback_verified(self):
+        """
+        When the post_checkout signal is emitted, the receiver should attempt
+        to fulfill the newly-placed order and send receipt email.
+        """
+        credit_provider_id = 'HGW'
+        credit_provider_name = 'Hogwarts'
+        body = {'display_name': credit_provider_name}
+        httpretty.register_uri(
+            httpretty.GET,
+            self.site.siteconfiguration.build_lms_url(
+                'api/credit/v1/providers/{credit_provider_id}/'.format(credit_provider_id=credit_provider_id)
+            ),
+            body=json.dumps(body),
+            content_type='application/json'
+        )
+
+        order = self.prepare_order('verified', credit_provider_id=credit_provider_id)
+        self.mock_access_token_response()
+        send_course_purchase_email(None, user=self.user, order=order)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].from_email, order.site.siteconfiguration.from_email)
+        self.assertEqual(mail.outbox[0].subject, 'Order Receipt')
+
+        self.assertEqual(
+            mail.outbox[0].body,
+            '\nPayment confirmation for: {course_title}'
+            '\n\nDear {full_name},'
+            '\n\nThank you for purchasing {credit_hours} credit hours from {credit_provider_name} for {course_title}. '
+            'A charge will appear on your credit or debit card statement with a company name of "{platform_name}".'
+            '\n\nTo receive your course credit, you must also request credit at the {credit_provider_name} website. '
+            'For a link to request credit from {credit_provider_name}, or to see the status of your credit request, '
+            'go to your {platform_name} dashboard.'
+            '\n\nTo explore other credit-eligible courses, visit the {platform_name} website. '
+            'We add new courses frequently!'
+            '\n\nTo view your payment information, visit the following website.'
+            '\n{receipt_url}'
+            '\n\nThank you. We hope you enjoyed your course!'
+            '\nThe {platform_name} team'
+            '\n\nYou received this message because you purchased credit hours for {course_title}, '
+            'an {platform_name} course.\n'.format(
+                course_title=order.lines.first().product.course.name,
                 full_name=self.user.get_full_name(),
                 credit_hours=2,
                 credit_provider_name=credit_provider_name,
@@ -116,9 +170,9 @@ class SignalTests(ProgramTestMixin, CouponMixin, TestCase):
         )
 
     def test_post_checkout_callback_no_credit_provider(self):
-        order = self.prepare_order('verified')
+        order = self.prepare_order('credit')
         with LogCapture(LOGGER_NAME) as l:
-            send_course_purchase_email(None, user=self.user, order=order)
+            send_course_purchase_email(None, order=order, user=self.user)
             l.check(
                 (
                     LOGGER_NAME,
