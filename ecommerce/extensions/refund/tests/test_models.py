@@ -6,6 +6,7 @@ import ddt
 import httpretty
 import mock
 from django.conf import settings
+from ecommerce_worker.sailthru.v1.tasks import send_course_refund_email
 from oscar.apps.payment.exceptions import PaymentError
 from oscar.core.loading import get_class, get_model
 from oscar.test.factories import UserFactory
@@ -380,12 +381,17 @@ class RefundTests(RefundTestMixin, StatusTestsMixin, TestCase):
         with LogCapture(REFUND_MODEL_LOGGER_NAME) as l:
             refund._notify_purchaser()  # pylint: disable=protected-access
 
-        msg = 'Course refund notification scheduled for Refund [{}].'.format(refund.id)
+        msg = 'Course refund notification for Refund [{}] has been sent to learner {}.'.format(refund.id, user.email)
         l.check(
             (REFUND_MODEL_LOGGER_NAME, 'INFO', msg)
         )
 
         amount = format_currency(order.currency, price)
+
+        send_course_refund_email.delay(
+            user.email, refund.id, amount, course.name, order.number, order_url, site_code=self.partner.short_code
+        )
+
         mock_task.assert_called_once_with(
             user.email, refund.id, amount, course.name, order.number, order_url, site_code=self.partner.short_code
         )
@@ -413,12 +419,18 @@ class RefundTests(RefundTestMixin, StatusTestsMixin, TestCase):
         with LogCapture(REFUND_MODEL_LOGGER_NAME) as l:
             refund._notify_purchaser()  # pylint: disable=protected-access
 
-        msg = 'Course refund notification scheduled for Refund [{}].'.format(refund.id)
+        msg = 'Course refund notification for Refund [{}] has been sent to learner {}.'.format(refund.id, user.email)
         l.check(
             (REFUND_MODEL_LOGGER_NAME, 'INFO', msg)
         )
 
         amount = format_currency(order.currency, 100)
+
+        send_course_refund_email.delay(
+            user.email, refund.id, amount, course_entitlement.title, order.number,
+            order_url, site_code=self.partner.short_code
+        )
+
         mock_task.assert_called_once_with(
             user.email, refund.id, amount, course_entitlement.title, order.number,
             order_url, site_code=self.partner.short_code
