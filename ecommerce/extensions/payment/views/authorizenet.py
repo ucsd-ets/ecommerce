@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 import base64
-import json
 import logging
 
 from django.conf import settings
@@ -15,7 +14,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 from oscar.apps.partner import strategy
-from oscar.apps.payment.exceptions import TransactionDeclined
 from oscar.core.loading import get_class, get_model
 from rest_framework.views import APIView
 
@@ -58,7 +56,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
     def dispatch(self, request, *args, **kwargs):
         return super(AuthorizeNetNotificationView, self).dispatch(request, *args, **kwargs)
 
-    def _send_transaction_declined_email(self, basket, transaction_status, course_title):
+    def send_transaction_declined_email(self, basket, transaction_status, course_title):
         """
             send email to the user after receiving a transcation notification with
             decilened/error status.
@@ -78,7 +76,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
             basket.site
         )
 
-    def _get_basket(self, basket_id):
+    def get_basket(self, basket_id):
         """
             Retrieve a basket using a basket Id.
 
@@ -97,7 +95,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
         except (ValueError, ObjectDoesNotExist):
             return None
 
-    def _get_billing_address(self, transaction_bill, order_number, basket):
+    def get_billing_address(self, transaction_bill, order_number, basket):
         """
             Prepare and return a billing address object using transaction billing information.
 
@@ -128,7 +126,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
             billing_address = None
         return billing_address
 
-    def _call_handle_order_placement(self, basket, request, transaction_details):
+    def call_handle_order_placement(self, basket, request, transaction_details):
         """
             Handle order placement for approved transactions.
         """
@@ -140,7 +138,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
             user = basket.owner
             order_number = str(transaction_details.transaction.order.invoiceNumber)
 
-            billing_address = self._get_billing_address(
+            billing_address = self.get_billing_address(
                 transaction_details.transaction.billTo, order_number, basket)
 
             order = self.handle_order_placement(
@@ -166,7 +164,6 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
             that notification has been received at our end otherwise they will send it again and
             again after the particular interval.
         """
-        course_id = None
         notification = request.data
         if notification.get("eventType") != NOTIFICATION_TYPE_AUTH_CAPTURE_CREATED:
             error_meassage = (
@@ -199,7 +196,7 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
                 basket_id
             )
 
-            basket = self._get_basket(basket_id)
+            basket = self.get_basket(basket_id)
 
             if not basket:
                 logger.error('Received AuthorizeNet payment notification for non-existent basket [%s].', basket_id)
@@ -216,7 +213,6 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
             )
 
             product = basket.all_lines()[0].product
-            course_id = product.course_id
             if payload.get("responseCode") != 1:
                 transaction_status = "Declined" if payload.get("responseCode") == 2 else "Error"
                 error_message = (
@@ -225,20 +221,19 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
                 )
                 logger.error(error_message, transaction_id, basket_id, transaction_status)
                 course_title = product.course.name
-                self._send_transaction_declined_email(basket, transaction_status, course_title)
+                self.send_transaction_declined_email(basket, transaction_status, course_title)
 
             else:
                 with transaction.atomic():
                     self.handle_payment(transaction_details, basket)
-                    self._call_handle_order_placement(basket, request, transaction_details)
+                    self.call_handle_order_placement(basket, request, transaction_details)
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception(
                 'An error occurred while processing the AuthorizeNet payment for transaction_id [%s].',
                 transaction_id
             )
-        finally:
-            return HttpResponse(status=200)
+        return HttpResponse(status=200)
 
 
 def handle_redirection(request):
@@ -258,11 +253,11 @@ def handle_redirection(request):
     try:
         basket = Basket.objects.get(id=basket_id)
     except Basket.DoesNotExist:
-        logger.error('Basket with ID: {basket_id} not found, cannot generete GA event.'.format(basket_id=basket_id))
+        logger.error('Basket with ID: %d not found, cannot generete GA event.', basket_id)
     else:
         try:
             ga_event = _get_ga_event(request, basket)
-        except Exception as ex:     # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
             logger.exception('Error while trying to get GA event data: %s', str(ex))
         else:
             add_to_ga_events_cookie(request, response, 'purchase', ga_event, domain=domain)
@@ -300,7 +295,7 @@ def _get_ga_event(request, basket):
 
     total_price = 0
 
-    for basket_line_item in basket._lines:
+    for basket_line_item in basket._lines:  # pylint: disable=protected-access
         price = float(basket_line_item.line_price_incl_tax_incl_discounts)
         total_price += price
         item = {
@@ -329,7 +324,7 @@ def _get_course_id_from_basket(basket):
     Returns:
         course_id if found in the basket, otherwise empty string
     """
-    line_items = basket._lines
+    line_items = basket._lines  # pylint: disable=protected-access
     if line_items:
         try:
             return line_items[0].product.course_id

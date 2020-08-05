@@ -121,7 +121,7 @@ class Course(models.Model):
                 return enrollment_code
         return None
 
-    def get_course_seat_name(self, certificate_type, id_verification_required):
+    def get_course_seat_name(self):
         """ Returns the name for a course seat. """
         return u'Seat in {} with Statement of Accomplishment'.format(self.name)
 
@@ -208,7 +208,7 @@ class Course(models.Model):
         seat.structure = Product.CHILD
         seat.parent = self.parent_seat_product
         seat.is_discountable = True
-        seat.title = self.get_course_seat_name(certificate_type, id_verification_required)
+        seat.title = self.get_course_seat_name()
         seat.expires = expires
 
         seat.save()

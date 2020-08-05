@@ -7,6 +7,7 @@ import ddt
 import httpretty
 import mock
 import pytz
+from django.conf import settings
 from django.test.client import RequestFactory
 from edx_django_utils.cache import TieredCache
 from oscar.core.loading import get_class, get_model
@@ -42,7 +43,11 @@ class OrderNumberGeneratorTests(TestCase):
     generator = OrderNumberGenerator()
 
     def assert_order_number_matches_basket(self, basket, partner):
-        expected = '{}-{}'.format(partner.short_code.upper(), 100000 + basket.id)
+        order_prefix = settings.ORDER_NUMBER_PREFIX
+        if not order_prefix:
+            order_prefix = partner.short_code
+
+        expected = '{}-{}'.format(order_prefix, 100000 + basket.id)
         self.assertEqual(self.generator.order_number(basket), expected)
 
     def test_order_number(self):
@@ -70,8 +75,7 @@ class OrderNumberGeneratorTests(TestCase):
         acme = PartnerFactory(name='ACME')
 
         for partner in (self.partner, acme,):
-            self.assertEqual(self.generator.order_number_from_basket_id(partner, basket.id),
-                             '{}-{}'.format(partner.short_code.upper(), 100000 + basket.id))
+            self.assert_order_number_matches_basket(basket, partner)
 
     def test_basket_id(self):
         """ Verify the method returns the ID of the basket associated with a given order number. """

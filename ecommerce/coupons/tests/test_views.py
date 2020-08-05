@@ -408,15 +408,10 @@ class CouponRedeemViewTests(CouponMixin, DiscoveryTestMixin, LmsApiMockMixin, En
         """ Verify an error is returned for expired coupon. """
         start_datetime = now() - datetime.timedelta(days=20)
         end_datetime = now() - datetime.timedelta(days=10)
-        code = FuzzyText().fuzz()
-        __, product = prepare_voucher(code=code, start_datetime=start_datetime, end_datetime=end_datetime)
-
-        url = format_url(base=self.redeem_url, params={
-            'code': code,
-            'sku': StockRecord.objects.get(product=product).partner_sku
-        })
-        response = self.client.get(url)
-        self.assertEqual(response.context['error'], 'This coupon code has expired.')
+        voucher, product = prepare_voucher(start_datetime=start_datetime, end_datetime=end_datetime)
+        valid, msg = voucher_is_valid(voucher=voucher, products=[product], request=None)
+        self.assertFalse(valid)
+        self.assertEqual(msg, 'This coupon code has expired.')
 
     @httpretty.activate
     def test_basket_redirect_discount_code(self):

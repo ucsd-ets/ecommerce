@@ -244,7 +244,8 @@ class Refund(StatusMixin, TimeStampedModel):
                 },
                 self.order.site
             )
-            logger.info('Course refund notification for Refund [%d] has been sent to learner %s.', self.id, self.user.email)
+            logger.info(
+                'Course refund notification for Refund [%d] has been sent to learner %s.', self.id, self.user.email)
 
     def _revoke_lines(self):
         """Revoke fulfillment for the lines in this Refund."""

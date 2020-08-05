@@ -57,12 +57,11 @@ class AssignVoucherView(APIView):
             try:
                 support_emails = settings.ECOMMERCE_SUPPORT_EMAILS
 
-                logger.info('Sending email to support ({}) to notify that course coupons'
-                            ' limit has been reached for course: {}. Available vouchers: {}'.format(
-                                support_emails,
-                                course_key,
-                                remaining_vouchers_count
-                            ))
+                logger.info(  # pylint: disable=logging-not-lazy
+                    'Sending email to support (%s) to notify that course coupons'
+                    ' limit has been reached for course: %s. Available vouchers: %d' %
+                    (support_emails, course_key, remaining_vouchers_count)
+                )
                 coupons_link = '{}{}'.format(settings.ECOMMERCE_URL_ROOT, reverse('coupons:app', args=['']))
                 is_email_sent = send_email_notification(support_emails, COUPONS_LIMIT_REACHED, {
                     'coupons_link': coupons_link,
@@ -70,19 +69,27 @@ class AssignVoucherView(APIView):
                 }, site)
 
                 if is_email_sent:
-                    logger.info('Sent an email to support ({}) to notify that course coupons'
-                                ' limit has been reached for course: {}'.format(support_emails, course_key))
+                    logger.info(  # pylint: disable=logging-not-lazy
+                        'Sent an email to support (%s) to notify that course coupons'
+                        ' limit has been reached for course: %s' %
+                        (support_emails, course_key)
+                    )
             except AttributeError:
-                logger.error('Settings has no Attribute `ECOMMERCE_SUPPORT_EMAILS` therefore unable to notify the '
-                             'support about coupon exhaustion for course: {}'.format(course_key))
+                logger.error(  # pylint: disable=logging-not-lazy
+                    'Settings has no Attribute `ECOMMERCE_SUPPORT_EMAILS` therefore unable to notify the '
+                    'support about coupon exhaustion for course: %s' % course_key
+                )
             except Exception as ex:     # pylint: disable=broad-except
-                logger.error('Failed to email to support ({}) to notify that course coupons'
-                             ' limit has been reached for course: {}\nError: {}'.format(
-                                 support_emails, course_key, ex.message))
+                logger.error(  # pylint: disable=logging-not-lazy
+                    'Failed to email to support (%s) to notify that course coupons'
+                    ' limit has been reached for course: %s\nError: %s' %
+                    (support_emails, course_key, ex.message)
+                )
 
         if remaining_vouchers_count == 0:
-            logger.exception('Vouchers count for course: {} is 0'
-                             ' therefore no more coupons will be assigned to any user'.format(course_key))
+            logger.exception(  # pylint: disable=logging-not-lazy
+                'Vouchers count for course: %s is 0 therefore no more'
+                ' coupons will be assigned to any user' % course_key)
 
         if not available_vouchers:
             return JsonResponse({}, status=400)
@@ -91,9 +98,10 @@ class AssignVoucherView(APIView):
         offer = OfferAssignment.objects.create(offer=available_voucher.best_offer,
                                                user_email=user_email,
                                                code=available_voucher.code)
-        logger.info('Successfully assigned voucher with code: {} to user: {} for course: {}'.format(
-            available_voucher.code, user_email, course_key
-        ))
+        logger.info(  # pylint: disable=logging-not-lazy
+            'Successfully assigned voucher with code: %s to user: %s for course: %s' %
+            (available_voucher.code, user_email, course_key)
+        )
 
         try:
             course = Course.objects.get(id=course_key)
@@ -113,14 +121,18 @@ class AssignVoucherView(APIView):
                 ) if course_sku else ''
             }, site)
 
-            logger.info('Successfully sent an email to user: {} about assigned voucher'.format(user_email))
+            logger.info(  # pylint: disable=logging-not-lazy
+                'Successfully sent an email to user: %s about assigned voucher' % user_email
+            )
 
             offer.status = OFFER_ASSIGNED
             offer.save()
 
-        except Exception as ex:     # pylint: disable=broad-except
-            logger.error('Failed to send email to user {} with voucher code.'
-                         'Error message: {}'.format(user_email, str(ex)))
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error(  # pylint: disable=logging-not-lazy
+                'Failed to send email to user %s with voucher code. Error message: %s' %
+                (user_email, str(ex))
+            )
 
         finally:
             return JsonResponse({}, status=200)  # pylint: disable=lost-exception
@@ -147,13 +159,17 @@ class CourseCouponView(APIView):
         filtered_coupon_products = coupon_service.filter_coupons_for_course_key(coupon_products, course_key, site)
 
         if filtered_coupon_products:
-            logger.info('{} coupon(s) found for course: {}'.format(len(filtered_coupon_products), course_key))
+            logger.info(  # pylint: disable=logging-not-lazy
+                '%d coupon(s) found for course: %s' % (len(filtered_coupon_products), course_key)
+            )
             return JsonResponse({
                 'found': True
             }, status=200)
 
         else:
-            logger.info('No coupons found for course: {}'.format(course_key))
+            logger.info(  # pylint: disable=logging-not-lazy
+                'No coupons found for course: %s' % course_key
+            )
             return JsonResponse({
                 'found': False
             }, status=400)

@@ -94,17 +94,9 @@ class CourseMigrationTestMixin(DiscoveryTestMixin):
 
     def assert_seat_valid(self, seat, mode):
         """ Verify the given seat is configured correctly. """
-        certificate_type = Course.certificate_type_for_mode(mode)
-
-        expected_title = 'Seat in {}'.format(self.course_name)
-        if certificate_type != '':
-            expected_title += ' with {} certificate'.format(certificate_type)
-
-            if seat.attr.id_verification_required:
-                expected_title += u' (and ID verification)'
+        expected_title = 'Seat in {} with Statement of Accomplishment'.format(self.course_name)
 
         self.assertEqual(seat.title, expected_title)
-        self.assertEqual(getattr(seat.attr, 'certificate_type', ''), certificate_type)
         self.assertEqual(seat.expires, EXPIRES)
         self.assertEqual(seat.attr.course_key, self.course_id)
         self.assertEqual(seat.attr.id_verification_required, Course.is_mode_verified(mode))

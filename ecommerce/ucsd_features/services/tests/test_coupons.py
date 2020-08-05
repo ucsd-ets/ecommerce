@@ -59,8 +59,8 @@ class CouponsServiceTestCases(DiscoveryTestMixin, CouponMixin, TestCase):
             }]
         }
         with patch(
-                'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
-                return_value=get_catalog_course_runs_response
+            'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
+            return_value=get_catalog_course_runs_response
         ):
             coupons = coupons_service.filter_coupons_for_course_key(coupons_queryset, self.course.id, self.site)
             self.assertItemsEqual(coupons, self.coupons)
