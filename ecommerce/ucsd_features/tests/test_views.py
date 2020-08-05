@@ -13,6 +13,7 @@ from oscar.core.loading import get_model
 from ecommerce.coupons.tests.mixins import CouponMixin
 from ecommerce.extensions.catalogue.tests.mixins import DiscoveryTestMixin
 from ecommerce.extensions.offer.constants import OFFER_ASSIGNED
+from ecommerce.tests.mixins import JwtMixin
 from ecommerce.tests.testcases import TestCase
 from ecommerce.ucsd_features.constants import CATEGORY_GEOGRAPHY_PROMOTION_SLUG, COUPON_ASSIGNED, COUPONS_LIMIT_REACHED
 
@@ -24,7 +25,7 @@ OfferAssignment = get_model('offer', 'OfferAssignment')
 JSON_CONTENT_TYPE = 'application/json'
 
 
-class ViewsTestBaseMixin(TestCase, CouponMixin, DiscoveryTestMixin):
+class ViewsTestBaseMixin(TestCase, CouponMixin, DiscoveryTestMixin, JwtMixin):
     """
     Base class for the views' test.
     """
@@ -32,6 +33,7 @@ class ViewsTestBaseMixin(TestCase, CouponMixin, DiscoveryTestMixin):
         super(ViewsTestBaseMixin, self).setUp()
         self.user = self.create_user()
         self.client.login(username=self.user.username, password=self.password)
+        self.auth_header = 'JWT ' + self.generate_token({'username': self.user.username})
 
         self.category = Category.objects.get(slug=CATEGORY_GEOGRAPHY_PROMOTION_SLUG)
         self.course, self.seat = self.create_course_and_seat(seat_type='verified')
@@ -74,7 +76,7 @@ class CourseCouponViewTestCases(ViewsTestBaseMixin):
 
     @patch('ecommerce.ucsd_features.views.logger.error')
     def test_return_404_if_no_course_key_is_provided(self, mocked_logger_error):
-        response = self.client.post(self.url, {})
+        response = self.client.post(self.url, {}, content_type=JSON_CONTENT_TYPE, HTTP_AUTHORIZATION=self.auth_header)
 
         self.assertEqual(response.status_code, 404)
         mocked_logger_error.assert_called_once_with('No course key provided')
@@ -95,7 +97,8 @@ class CourseCouponViewTestCases(ViewsTestBaseMixin):
                 data=json.dumps({
                     'course_key': str(self.course.id)
                 }),
-                content_type=JSON_CONTENT_TYPE
+                content_type=JSON_CONTENT_TYPE,
+                HTTP_AUTHORIZATION=self.auth_header
             )
             self.assertEqual(response.status_code, 400)
 
@@ -115,12 +118,9 @@ class CourseCouponViewTestCases(ViewsTestBaseMixin):
 
             response = self.client.post(self.url, data=json.dumps({
                 'course_key': str(self.course.id)
-            }), content_type=JSON_CONTENT_TYPE)
+            }), content_type=JSON_CONTENT_TYPE, HTTP_AUTHORIZATION=self.auth_header)
             self.assertEqual(response.status_code, 200)
-
-        mocked_logger_info.assert_called_once_with(
-            '{} coupon(s) found for course: {}'.format(2, self.course.id)
-        )
+        mocked_logger_info.assert_called_once_with('{} coupon(s) found for course: {}'.format(2, self.course.id))
 
 
 class AssignVoucherViewTestCases(ViewsTestBaseMixin):
@@ -152,11 +152,14 @@ class AssignVoucherViewTestCases(ViewsTestBaseMixin):
             'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
             return_value=get_catalog_course_runs_response
         ):
-            response = self.client.post(self.url, data=json.dumps({
-                'course_key': self.course.id,
-                'user_email': self.user.email
-            }), content_type=JSON_CONTENT_TYPE)
-
+            response = self.client.post(
+                self.url, data=json.dumps({
+                    'course_key': self.course.id,
+                    'user_email': self.user.email
+                }),
+                content_type=JSON_CONTENT_TYPE,
+                HTTP_AUTHORIZATION=self.auth_header
+            )
             # Test that 400 response is returned
             self.assertEqual(response.status_code, 400)
 
@@ -208,7 +211,7 @@ class AssignVoucherViewTestCases(ViewsTestBaseMixin):
             response = self.client.post(self.url, data=json.dumps({
                 'course_key': self.course.id,
                 'user_email': self.user.email
-            }), content_type=JSON_CONTENT_TYPE)
+            }), content_type=JSON_CONTENT_TYPE, HTTP_AUTHORIZATION=self.auth_header)
 
             # Test that 200 response is returned
             self.assertEqual(response.status_code, 200)
