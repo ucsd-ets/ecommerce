@@ -6,32 +6,6 @@ on:
 env:
   OPENEDX_RELEASE: 'ironwood.master'
 jobs:
-  translations-validations:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup docker containers
-        run: |
-          docker-compose -f .github/docker-compose-github.yml up -d
-      - name: Install requirements.js
-        run: |
-          docker exec -t ecommerce_testing bash -c '
-          source /edx/app/ecommerce/ecommerce_env &&
-          cd /edx/app/ecommerce/ecommerce/ &&
-          make requirements.js'
-      - name: run check_translations_up_to_date
-        run: |
-          docker exec -t ecommerce_testing bash -c '
-          source /edx/app/ecommerce/ecommerce_env &&
-          cd /edx/app/ecommerce/ecommerce/ &&
-          make check_translations_up_to_date'
-      - name: run validate_translations
-        run: |
-          docker exec -t ecommerce_testing bash -c '
-          source /edx/app/ecommerce/ecommerce_env &&
-          cd /edx/app/ecommerce/ecommerce/ &&
-          make validate_translations'
-
   quality-tests:
     runs-on: ubuntu-latest
     steps:

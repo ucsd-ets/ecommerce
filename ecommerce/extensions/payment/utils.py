@@ -21,7 +21,7 @@ class LxmlObjectJsonEncoder(json.JSONEncoder):
     """
        A specialized JSON encoder that can handle lxml objectify types
     """
-    def default(self, o):
+    def default(self, o):  # pylint: disable=method-hidden
         if isinstance(o, lxml.objectify.IntElement):
             return int(o)
         if isinstance(o, lxml.objectify.NumberElement) or isinstance(o, lxml.objectify.FloatElement):

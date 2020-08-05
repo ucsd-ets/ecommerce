@@ -87,8 +87,8 @@ class CourseCouponViewTestCases(ViewsTestBaseMixin):
             }]
         }
         with patch(
-                'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
-                return_value=get_catalog_course_runs_response
+            'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
+            return_value=get_catalog_course_runs_response
         ):
             response = self.client.post(
                 self.url,
@@ -109,8 +109,8 @@ class CourseCouponViewTestCases(ViewsTestBaseMixin):
             }]
         }
         with patch(
-                'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
-                return_value=get_catalog_course_runs_response
+            'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
+            return_value=get_catalog_course_runs_response
         ):
 
             response = self.client.post(self.url, data=json.dumps({
@@ -149,8 +149,8 @@ class AssignVoucherViewTestCases(ViewsTestBaseMixin):
         }
 
         with patch(
-                'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
-                return_value=get_catalog_course_runs_response
+            'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
+            return_value=get_catalog_course_runs_response
         ):
             response = self.client.post(self.url, data=json.dumps({
                 'course_key': self.course.id,
@@ -202,8 +202,8 @@ class AssignVoucherViewTestCases(ViewsTestBaseMixin):
         }
 
         with patch(
-                'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
-                return_value=get_catalog_course_runs_response
+            'ecommerce.ucsd_features.services.coupons.get_catalog_course_runs',
+            return_value=get_catalog_course_runs_response
         ):
             response = self.client.post(self.url, data=json.dumps({
                 'course_key': self.course.id,
