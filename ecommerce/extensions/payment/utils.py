@@ -27,7 +27,10 @@ class LxmlObjectJsonEncoder(json.JSONEncoder):
         if isinstance(o, lxml.objectify.NumberElement) or isinstance(o, lxml.objectify.FloatElement):
             return float(o)
         if isinstance(o, lxml.objectify.ObjectifiedDataElement):
-            return str(o)
+            try:
+                return str(o)
+            except UnicodeEncodeError:
+                return unicode(o).encode('utf-8')
         if hasattr(o, '__dict__'):
             return o.__dict__
         return json.JSONEncoder.default(self, o)
