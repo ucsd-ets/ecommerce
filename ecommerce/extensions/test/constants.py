@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 transaction_detail_response_error_data = {
     "result_code": "Error",
     "message_code": "E00050",
@@ -8,6 +9,7 @@ transaction_detail_response_success_data = {
     "result_code": "Ok",
     "message_code": "I00001",
     "message_text": "Successful",
+    "country": "tallidsvägen"
 }
 
 refund_success_response = """
