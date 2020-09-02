@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 
 from authorizenet import apicontractsv1
@@ -247,7 +248,10 @@ class AuthorizeNetTests(PaymentProcessorTestCaseMixin, TestCase):
         """
             Verify that the processor creates the appropriate PaymentEvent and Source objects.
         """
-        response_data = transaction_detail_response_success_data
+        response_data = transaction_detail_response_success_data.copy()
+        # testing for non-ascii character support
+        response_data['country'] = 'tallidsvägen'
+
         transaction_detail_xml = get_authorizenet_transaction_reponse_xml(
             self.transaction_id, self.basket, response_data)
         transaction_response = objectify.fromstring(transaction_detail_xml)
