@@ -34,7 +34,7 @@ def get_authorizenet_transaction_reponse_xml(transaction_id, basket, data):
         card_type="Visa",
         first_name="fake_first_name",
         last_name="fake_last_name",
-        country=CountryFactory().iso_3166_1_a2
+        country=data.get('country', CountryFactory().iso_3166_1_a2)
     )
     return transaction_detail_xml
 
