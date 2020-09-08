@@ -6,7 +6,9 @@ import logging
 from django.conf import settings
 from django.http import JsonResponse
 from django.urls import reverse
+from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from oscar.core.loading import get_model
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from ecommerce.extensions.offer.constants import OFFER_ASSIGNED
@@ -27,6 +29,8 @@ class AssignVoucherView(APIView):
     """
     View to assign voucher to a user.
     """
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         """
@@ -142,6 +146,8 @@ class CourseCouponView(APIView):
     """
     View to check if a course has applicable coupons or not.
     """
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         """
