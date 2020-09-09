@@ -114,7 +114,8 @@ class AuthorizeNetNotificationView(EdxOrderPlacementMixin, APIView):
                 state=str(getattr(transaction_bill, 'state', '')),
                 country=Country.objects.get(
                     iso_3166_1_a2__iexact=transaction_bill.country
-                )
+                ),
+                postcode=str(getattr(transaction_bill, 'zip', ''))
             )
 
         except Exception:  # pylint: disable=broad-except
